@@ -7,7 +7,6 @@ import com.greenfox.backend.modules.resort.dto.*;
 import com.greenfox.backend.modules.resort.entity.Resort;
 import com.greenfox.backend.modules.resort.mapper.ResortMapper;
 import com.greenfox.backend.modules.resort.repository.ResortRepository;
-import com.greenfox.backend.modules.resort.specification.ResortSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,10 +37,7 @@ public class ResortService {
      */
     @Transactional(readOnly = true)
     public PageResponse<ResortListResponse> getResorts(ResortFilterRequest filter, Pageable pageable) {
-        Page<Resort> resorts = resortRepository.findAll(
-                ResortSpecification.withFilters(filter),
-                pageable
-        );
+        Page<Resort> resorts = resortRepository.findAllWithDistance(filter, pageable);
 
         List<ResortListResponse> content = resorts.getContent().stream()
                 .map(resortMapper::toListResponse)

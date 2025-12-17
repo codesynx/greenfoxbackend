@@ -24,6 +24,13 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@SqlResultSetMapping(
+        name = "ResortWithDistanceMapping",
+        entities = @EntityResult(
+                entityClass = Resort.class
+        ),
+        columns = @ColumnResult(name = "distance", type = Double.class)
+)
 public class Resort extends BaseEntity {
 
     @Column(name = "name", nullable = false, length = 200)
@@ -83,6 +90,9 @@ public class Resort extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private boolean active = true;
+
+    @Transient
+    private Double distanceKm;
 
     /**
      * Embedded class for resort photos with descriptions.

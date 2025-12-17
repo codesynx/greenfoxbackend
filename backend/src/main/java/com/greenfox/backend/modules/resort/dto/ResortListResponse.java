@@ -48,5 +48,8 @@ public class ResortListResponse {
 
     @Schema(description = "Maximum number of guests")
     private Integer maxGuests;
+
+    @Schema(description = "Distance from user in kilometers (if user coordinates provided)")
+    private Double distanceKm;
 }
 

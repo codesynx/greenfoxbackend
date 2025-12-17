@@ -18,7 +18,7 @@ import java.util.UUID;
  * Repository for Resort entity with custom query methods.
  */
 @Repository
-public interface ResortRepository extends JpaRepository<Resort, UUID>, JpaSpecificationExecutor<Resort> {
+public interface ResortRepository extends JpaRepository<Resort, UUID>, JpaSpecificationExecutor<Resort>, ResortRepositoryCustom {
 
     Optional<Resort> findByIdAndDeletedFalseAndActiveTrue(UUID id);
 
