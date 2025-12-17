@@ -1,6 +1,8 @@
 package com.greenfox.backend.modules.user.service;
 
+import com.greenfox.backend.common.exception.BadRequestException;
 import com.greenfox.backend.common.exception.ResourceNotFoundException;
+import com.greenfox.backend.common.service.StorageService;
 import com.greenfox.backend.modules.user.dto.DeviceTokenRequest;
 import com.greenfox.backend.modules.user.dto.UpdateProfileRequest;
 import com.greenfox.backend.modules.user.dto.UserProfileResponse;
@@ -13,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Base64;
 import java.util.UUID;
 
 /**
@@ -25,6 +28,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final StorageService storageService;
 
     /**
      * Get current user's profile.
@@ -47,9 +51,43 @@ public class UserService {
             user.setName(request.getName().trim());
         }
 
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail().trim().toLowerCase());
+        }
+
         if (request.getAvatarUrl() != null) {
-            // TODO: Handle avatar upload via GCP if base64 data is provided
-            user.setAvatarUrl(request.getAvatarUrl());
+            String avatarData = request.getAvatarUrl();
+            if (avatarData.startsWith("data:image")) {
+                // Handle base64 upload
+                try {
+                    String[] parts = avatarData.split(",");
+                    String metadata = parts[0];
+                    String base64Content = parts[1];
+                    String contentType = metadata.substring(metadata.indexOf(":") + 1, metadata.indexOf(";"));
+                    String extension = contentType.substring(contentType.indexOf("/") + 1);
+                    
+                    byte[] decodedBytes = Base64.getDecoder().decode(base64Content);
+                    
+                    // Delete old avatar if exists and is a cloud URL
+                    if (user.getAvatarUrl() != null && user.getAvatarUrl().startsWith("http")) {
+                        storageService.deleteFile(user.getAvatarUrl());
+                    }
+                    
+                    String newUrl = storageService.uploadBytes(
+                            decodedBytes, 
+                            "avatar." + extension, 
+                            contentType, 
+                            "avatars"
+                    );
+                    user.setAvatarUrl(newUrl);
+                } catch (Exception e) {
+                    log.error("Failed to process avatar base64 data", e);
+                    throw new BadRequestException("Invalid avatar image data");
+                }
+            } else {
+                // Just update the URL if it's already a link
+                user.setAvatarUrl(avatarData);
+            }
         }
 
         User savedUser = userRepository.save(user);
@@ -63,10 +101,15 @@ public class UserService {
      */
     @Transactional
     public void saveDeviceToken(UserPrincipal principal, DeviceTokenRequest request) {
+        String token = request.getDeviceToken().trim();
+        if (token.length() < 10) {
+            throw new BadRequestException("Invalid device token format");
+        }
+        
         User user = getUserById(principal.getId());
-        user.setFcmToken(request.getDeviceToken());
+        user.setFcmToken(token);
         userRepository.save(user);
-        log.info("Device token saved for user: {}", principal.getId());
+        log.info("FCM token registered for user: {}", principal.getId());
     }
 
     /**

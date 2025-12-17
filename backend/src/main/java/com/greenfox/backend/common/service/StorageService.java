@@ -60,25 +60,38 @@ public class StorageService {
      * @return Public URL of uploaded file, or mock URL in dev mode
      */
     public String uploadFile(MultipartFile file, String folder) throws IOException {
+        return uploadBytes(file.getBytes(), file.getOriginalFilename(), file.getContentType(), folder);
+    }
+
+    /**
+     * Upload a byte array to cloud storage.
+     *
+     * @param bytes       File content in bytes
+     * @param originalFilename Original filename (used for extension)
+     * @param contentType MIME type of the file
+     * @param folder      Folder/prefix in bucket
+     * @return Public URL of uploaded file
+     */
+    public String uploadBytes(byte[] bytes, String originalFilename, String contentType, String folder) {
         initStorage();
 
-        String filename = generateFilename(file.getOriginalFilename());
+        String filename = generateFilename(originalFilename);
         String objectName = folder + "/" + filename;
 
         if (!initialized) {
             // Mock mode for development
             String mockUrl = "https://storage.googleapis.com/" + bucketName + "/" + objectName;
-            log.info("MOCK upload: {} -> {}", file.getOriginalFilename(), mockUrl);
+            log.info("MOCK upload: {} -> {}", originalFilename, mockUrl);
             return mockUrl;
         }
 
         try {
             BlobId blobId = BlobId.of(bucketName, objectName);
             BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
-                    .setContentType(file.getContentType())
+                    .setContentType(contentType)
                     .build();
 
-            storage.create(blobInfo, file.getBytes());
+            storage.create(blobInfo, bytes);
 
             String publicUrl = String.format("https://storage.googleapis.com/%s/%s", bucketName, objectName);
             log.info("File uploaded: {}", publicUrl);
@@ -86,7 +99,7 @@ public class StorageService {
             return publicUrl;
         } catch (Exception e) {
             log.error("Failed to upload file: {}", e.getMessage());
-            throw new IOException("Failed to upload file to cloud storage", e);
+            return null;
         }
     }
 

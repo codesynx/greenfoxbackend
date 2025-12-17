@@ -28,6 +28,9 @@ public class UserProfileResponse {
     @Schema(description = "User's display name")
     private String name;
 
+    @Schema(description = "User's email address")
+    private String email;
+
     @Schema(description = "URL to user's avatar image")
     private String avatarUrl;
 

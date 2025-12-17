@@ -25,6 +25,9 @@ public class User extends BaseEntity {
     @Column(name = "name", length = 100)
     private String name;
 
+    @Column(name = "email", length = 150)
+    private String email;
+
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
 

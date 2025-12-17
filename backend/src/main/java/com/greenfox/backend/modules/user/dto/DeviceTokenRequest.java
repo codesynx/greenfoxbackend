@@ -16,7 +16,10 @@ import lombok.NoArgsConstructor;
 public class DeviceTokenRequest {
 
     @NotBlank(message = "Device token is required")
-    @Schema(description = "Firebase Cloud Messaging device token")
+    @Schema(
+            description = "Firebase Cloud Messaging (FCM) device token. Get this from the React Native app using messaging().getToken().",
+            example = "f7e...9a2"
+    )
     private String deviceToken;
 }
 
