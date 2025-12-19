@@ -23,9 +23,9 @@ public class VerifyOtpRequest {
     private String phoneNumber;
 
     @NotBlank(message = "OTP code is required")
-    @Size(min = 4, max = 6, message = "OTP code must be 4-6 digits")
+    @Size(min = 6, max = 6, message = "OTP code must be exactly 6 digits")
     @Pattern(regexp = "^\\d+$", message = "OTP code must contain only digits")
-    @Schema(description = "4-digit OTP code", example = "1234")
+    @Schema(description = "6-digit OTP code", example = "123456")
     private String code;
 }
 

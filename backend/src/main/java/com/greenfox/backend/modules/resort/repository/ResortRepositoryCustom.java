@@ -12,3 +12,5 @@ public interface ResortRepositoryCustom {
     Page<Resort> findAllWithDistance(ResortFilterRequest filter, Pageable pageable);
 }
 
+
+

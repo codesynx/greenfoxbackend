@@ -32,6 +32,17 @@ public class AuthService {
     public OtpResponse sendOtp(SendOtpRequest request) {
         String phoneNumber = normalizePhone(request.getPhoneNumber());
 
+        // Check if this is a test number - skip OTP generation and SMS sending
+        if (otpService.isTestNumber(phoneNumber)) {
+            log.info("TEST MODE: Skipping OTP generation for test number: {}", maskPhone(phoneNumber));
+            return OtpResponse.builder()
+                    .phoneNumber(maskPhone(phoneNumber))
+                    .expiresInSeconds(otpService.getOtpExpirationSeconds())
+                    .retryAfterSeconds(0)
+                    .message("OTP sent successfully (test mode)")
+                    .build();
+        }
+
         // Generate OTP
         String otpCode = otpService.generateOtp(phoneNumber);
 
@@ -55,14 +66,17 @@ public class AuthService {
     public OtpResponse resendOtp(SendOtpRequest request) {
         String phoneNumber = normalizePhone(request.getPhoneNumber());
 
-        int throttleRemaining = otpService.getThrottleRemainingSeconds(phoneNumber);
-        if (throttleRemaining > 0) {
-            return OtpResponse.builder()
-                    .phoneNumber(maskPhone(phoneNumber))
-                    .expiresInSeconds(otpService.getOtpExpirationSeconds())
-                    .retryAfterSeconds(throttleRemaining)
-                    .message(String.format("Please wait %d seconds before requesting a new OTP", throttleRemaining))
-                    .build();
+        // For test numbers, skip throttle check
+        if (!otpService.isTestNumber(phoneNumber)) {
+            int throttleRemaining = otpService.getThrottleRemainingSeconds(phoneNumber);
+            if (throttleRemaining > 0) {
+                return OtpResponse.builder()
+                        .phoneNumber(maskPhone(phoneNumber))
+                        .expiresInSeconds(otpService.getOtpExpirationSeconds())
+                        .retryAfterSeconds(throttleRemaining)
+                        .message(String.format("Please wait %d seconds before requesting a new OTP", throttleRemaining))
+                        .build();
+            }
         }
 
         return sendOtp(request);

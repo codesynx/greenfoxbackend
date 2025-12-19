@@ -24,6 +24,9 @@ public class TwilioService {
     @Value("${app.twilio.phone-number}")
     private String fromPhoneNumber;
 
+    @Value("${app.twilio.test-numbers:}")
+    private String testNumbers;
+
     private boolean initialized = false;
 
     @PostConstruct
@@ -51,6 +54,12 @@ public class TwilioService {
     public boolean sendOtpSms(String toPhoneNumber, String otpCode) {
         String messageBody = String.format("Your GreenFox verification code is: %s. Valid for 5 minutes.", otpCode);
 
+        // Skip real SMS for test numbers
+        if (isTestNumber(toPhoneNumber)) {
+            log.info("TEST MODE: Skipping SMS for test number: {}. Code: {}", toPhoneNumber, otpCode);
+            return true;
+        }
+
         if (!initialized) {
             // Mock mode for development
             log.info("MOCK SMS to {}: {}", toPhoneNumber, messageBody);
@@ -77,6 +86,24 @@ public class TwilioService {
      */
     public boolean isConfigured() {
         return initialized;
+    }
+
+    /**
+     * Check if the phone number is in the test numbers list.
+     */
+    private boolean isTestNumber(String phoneNumber) {
+        if (testNumbers == null || testNumbers.isBlank()) {
+            return false;
+        }
+        String normalized = phoneNumber.replaceAll("[^0-9+]", "");
+        String[] testNumbersList = testNumbers.split(",");
+        for (String testNumber : testNumbersList) {
+            String normalizedTest = testNumber.trim().replaceAll("[^0-9+]", "");
+            if (normalizedTest.equals(normalized)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
