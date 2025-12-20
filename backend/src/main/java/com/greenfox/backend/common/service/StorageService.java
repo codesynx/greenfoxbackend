@@ -1,5 +1,6 @@
 package com.greenfox.backend.common.service;
 
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
@@ -10,7 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /**
@@ -40,15 +43,30 @@ public class StorageService {
 
         try {
             if (projectId != null && !projectId.isBlank() && !projectId.startsWith("your-")) {
-                String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
-                log.info("Initializing GCP Storage - Project ID: {}, Credentials: {}", 
-                        projectId, credentialsPath != null ? "Found at " + credentialsPath : "Not found (will use default)");
-                
                 StorageOptions.Builder builder = StorageOptions.newBuilder()
                         .setProjectId(projectId);
                 
-                // GCP SDK will automatically use GOOGLE_APPLICATION_CREDENTIALS env var
-                // or try default application credentials
+                // Check for JSON credentials in environment variable (for Render/cloud deployments)
+                String serviceAccountJson = System.getenv("GCP_SERVICE_ACCOUNT_JSON");
+                if (serviceAccountJson != null && !serviceAccountJson.isBlank()) {
+                    try {
+                        GoogleCredentials credentials = GoogleCredentials.fromStream(
+                                new ByteArrayInputStream(serviceAccountJson.getBytes(StandardCharsets.UTF_8)));
+                        builder.setCredentials(credentials);
+                        log.info("GCP Storage: Using credentials from GCP_SERVICE_ACCOUNT_JSON environment variable");
+                    } catch (IOException e) {
+                        log.error("Failed to parse GCP_SERVICE_ACCOUNT_JSON: {}", e.getMessage());
+                        throw e;
+                    }
+                } else {
+                    // Fall back to GOOGLE_APPLICATION_CREDENTIALS (file path) or default credentials
+                    String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+                    log.info("GCP Storage: Project ID: {}, Credentials: {}", 
+                            projectId, credentialsPath != null ? "File: " + credentialsPath : "Using default credentials");
+                    // GCP SDK will automatically use GOOGLE_APPLICATION_CREDENTIALS env var
+                    // or try default application credentials
+                }
+                
                 storage = builder.build().getService();
                 
                 // Test connection by trying to access bucket
