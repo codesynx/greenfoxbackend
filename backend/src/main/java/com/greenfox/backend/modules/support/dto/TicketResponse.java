@@ -7,29 +7,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
- * Response DTO for conversation summary (for admin).
+ * Response DTO for user ticket (conversation summary).
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Conversation summary")
-public class ConversationResponse {
+@Schema(description = "User support ticket")
+public class TicketResponse {
 
-    @Schema(description = "Conversation ID")
-    private String conversationId;
-
-    @Schema(description = "User ID")
-    private UUID userId;
-
-    @Schema(description = "User's phone number")
-    private String userPhone;
-
-    @Schema(description = "User's name")
-    private String userName;
+    @Schema(description = "Ticket/conversation ID")
+    private String ticketId;
 
     @Schema(description = "Message subject/title")
     private String subject;
@@ -40,13 +30,13 @@ public class ConversationResponse {
     @Schema(description = "Last message preview")
     private String lastMessage;
 
-    @Schema(description = "Whether last message is from admin")
-    private boolean lastFromAdmin;
-
-    @Schema(description = "Number of unread messages from user")
+    @Schema(description = "Number of unread messages")
     private int unreadCount;
 
     @Schema(description = "Last activity timestamp")
     private LocalDateTime lastActivityAt;
+
+    @Schema(description = "Ticket creation timestamp")
+    private LocalDateTime createdAt;
 }
 

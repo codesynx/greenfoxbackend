@@ -52,17 +52,62 @@ public class AdminResortController {
         return ResponseEntity.ok(ApiResponse.success(resorts));
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
-            summary = "Create Resort",
-            description = "Create a new resort"
+            summary = "Create Resort with Photos",
+            description = "Create a new resort with optional photos. All photos will be uploaded to GCP Cloud Storage. " +
+                         "Supported formats: JPEG, PNG, WebP. Maximum file size: 10MB per photo. Maximum 15 photos. " +
+                         "In Swagger UI, click 'Try it out' and use the file picker buttons to select images."
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Multipart form data with resort details and photos",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    schema = @Schema(type = "object", description = "Form data with resort fields and photo files")
+            )
     )
     public ResponseEntity<ApiResponse<ResortResponse>> createResort(
-            @Valid @RequestBody CreateResortRequest request) {
-        ResortResponse resort = resortService.createResort(request);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.success(resort, "Resort created successfully"));
+            @Parameter(description = "Resort name", required = true)
+            @RequestParam("name") String name,
+            @Parameter(description = "City location", required = true)
+            @RequestParam("city") String city,
+            @Parameter(description = "Base price per night in KZT", required = true)
+            @RequestParam("basePrice") String basePrice,
+            @Parameter(description = "Detailed description")
+            @RequestParam(value = "description", required = false) String description,
+            @Parameter(description = "Latitude coordinate")
+            @RequestParam(value = "latitude", required = false) String latitude,
+            @Parameter(description = "Longitude coordinate")
+            @RequestParam(value = "longitude", required = false) String longitude,
+            @Parameter(description = "Full address")
+            @RequestParam(value = "address", required = false) String address,
+            @Parameter(description = "Manual rating (0-5)")
+            @RequestParam(value = "rating", required = false) String rating,
+            @Parameter(description = "Number of reviews (manual)")
+            @RequestParam(value = "reviewsCount", required = false) String reviewsCount,
+            @Parameter(description = "Maximum number of guests")
+            @RequestParam(value = "maxGuests", required = false) String maxGuests,
+            @Parameter(description = "Comma-separated list of amenities (e.g., 'WiFi,Pool,Spa')")
+            @RequestParam(value = "amenities", required = false) String amenities,
+            @Parameter(
+                    description = "Photo files to upload (JPEG, PNG, or WebP). In Swagger UI, use the file picker buttons.",
+                    required = false
+            )
+            @RequestParam(value = "photos", required = false) List<MultipartFile> photos,
+            @Parameter(description = "Photo descriptions (comma-separated, matching order of photos)")
+            @RequestParam(value = "photoDescriptions", required = false) String photoDescriptions) {
+        try {
+            ResortResponse resort = resortService.createResortWithPhotos(
+                    name, city, basePrice, description, latitude, longitude, address,
+                    rating, reviewsCount, maxGuests, amenities, photos, photoDescriptions);
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(ApiResponse.success(resort, "Resort created successfully"));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("UPLOAD_ERROR", "Failed to upload photos: " + e.getMessage()));
+        }
     }
 
     @PatchMapping("/{id}")

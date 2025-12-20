@@ -22,6 +22,12 @@ public class SupportMessageResponse {
     @Schema(description = "Message unique identifier")
     private UUID id;
 
+    @Schema(description = "Message subject/title")
+    private String subject;
+
+    @Schema(description = "Message category")
+    private String category;
+
     @Schema(description = "Message content")
     private String message;
 

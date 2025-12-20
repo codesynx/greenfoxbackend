@@ -14,8 +14,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -129,5 +132,48 @@ public class UserService {
         return userRepository.findByPhoneNumberAndDeletedFalse(phoneNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "phone", phoneNumber));
     }
-}
 
+    /**
+     * Upload avatar image file.
+     */
+    @Transactional
+    public UserProfileResponse uploadAvatar(UserPrincipal principal, MultipartFile file) throws IOException {
+        // Validate file
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("File is required");
+        }
+
+        // Validate file size (10MB)
+        long maxFileSize = 10 * 1024 * 1024;
+        if (file.getSize() > maxFileSize) {
+            throw new BadRequestException("File size exceeds maximum allowed size of 10 MB");
+        }
+
+        // Validate content type
+        String contentType = file.getContentType();
+        List<String> allowedTypes = List.of("image/jpeg", "image/jpg", "image/png", "image/webp");
+        if (contentType == null || !allowedTypes.contains(contentType.toLowerCase())) {
+            throw new BadRequestException("Invalid file type. Allowed types: JPEG, PNG, WebP");
+        }
+
+        User user = getUserById(principal.getId());
+
+        // Delete old avatar if exists and is a cloud URL
+        if (user.getAvatarUrl() != null && user.getAvatarUrl().startsWith("http")) {
+            storageService.deleteFile(user.getAvatarUrl());
+        }
+
+        // Upload to GCP
+        String avatarUrl = storageService.uploadFile(file, "avatars");
+        
+        if (avatarUrl == null) {
+            throw new IOException("Failed to upload file to cloud storage");
+        }
+
+        user.setAvatarUrl(avatarUrl);
+        User savedUser = userRepository.save(user);
+        log.info("Avatar uploaded for user: {}", principal.getId());
+
+        return userMapper.toProfileResponse(savedUser);
+    }
+}

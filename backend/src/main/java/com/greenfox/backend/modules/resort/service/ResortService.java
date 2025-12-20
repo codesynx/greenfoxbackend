@@ -17,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -96,6 +98,155 @@ public class ResortService {
         log.info("Resort created: {} ({})", saved.getName(), saved.getId());
 
         return resortMapper.toResponse(saved);
+    }
+
+    /**
+     * Create a new resort with photos (Admin only, multipart/form-data).
+     */
+    @Transactional
+    public ResortResponse createResortWithPhotos(
+            String name, String city, String basePriceStr, String description,
+            String latitudeStr, String longitudeStr, String address,
+            String ratingStr, String reviewsCountStr, String maxGuestsStr, String amenitiesStr,
+            List<MultipartFile> photos, String photoDescriptionsStr) throws IOException {
+        
+        // Parse base price
+        BigDecimal basePrice;
+        try {
+            basePrice = new BigDecimal(basePriceStr);
+            if (basePrice.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BadRequestException("Base price must be greater than 0");
+            }
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Invalid base price format");
+        }
+
+        // Build resort entity
+        Resort resort = Resort.builder()
+                .name(name.trim())
+                .city(city.trim())
+                .basePrice(basePrice)
+                .description(description != null ? description.trim() : null)
+                .latitude(parseBigDecimal(latitudeStr, "Latitude"))
+                .longitude(parseBigDecimal(longitudeStr, "Longitude"))
+                .address(address != null ? address.trim() : null)
+                .rating(parseBigDecimal(ratingStr, "Rating"))
+                .reviewsCount(parseInteger(reviewsCountStr, "Reviews count"))
+                .maxGuests(parseInteger(maxGuestsStr, "Max guests"))
+                .amenities(parseAmenities(amenitiesStr))
+                .photos(new ArrayList<>())
+                .promo(false)
+                .active(true)
+                .build();
+
+        // Save resort first to get ID
+        Resort saved = resortRepository.save(resort);
+
+        // Parse photo descriptions
+        List<String> descriptions = parsePhotoDescriptions(photoDescriptionsStr);
+
+        // Upload and add photos
+        if (photos != null && !photos.isEmpty()) {
+            if (photos.size() > MAX_PHOTOS) {
+                throw new BadRequestException(
+                        String.format("Maximum %d photos allowed. Provided: %d", MAX_PHOTOS, photos.size())
+                );
+            }
+
+            List<Resort.ResortPhoto> resortPhotos = new ArrayList<>();
+            for (int i = 0; i < photos.size(); i++) {
+                MultipartFile file = photos.get(i);
+                if (file == null || file.isEmpty()) {
+                    continue;
+                }
+
+                // Validate file
+                validatePhotoFile(file);
+
+                // Upload to GCP
+                String photoUrl = storageService.uploadFile(file, "resorts");
+                if (photoUrl == null) {
+                    throw new IOException("Failed to upload photo to cloud storage");
+                }
+
+                // Get description
+                String description_text = (i < descriptions.size()) ? descriptions.get(i) : "";
+
+                Resort.ResortPhoto photo = Resort.ResortPhoto.builder()
+                        .url(photoUrl)
+                        .description(description_text.trim())
+                        .order(i)
+                        .build();
+
+                resortPhotos.add(photo);
+            }
+
+            saved.setPhotos(resortPhotos);
+            saved = resortRepository.save(saved);
+        }
+
+        log.info("Resort created with {} photos: {} ({})", 
+                saved.getPhotos().size(), saved.getName(), saved.getId());
+
+        return resortMapper.toResponse(saved);
+    }
+
+    private BigDecimal parseBigDecimal(String value, String fieldName) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return new BigDecimal(value.trim());
+        } catch (NumberFormatException e) {
+            throw new BadRequestException(String.format("Invalid %s format", fieldName));
+        }
+    }
+
+    private Integer parseInteger(String value, String fieldName) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            throw new BadRequestException(String.format("Invalid %s format", fieldName));
+        }
+    }
+
+    private List<String> parseAmenities(String amenitiesStr) {
+        if (amenitiesStr == null || amenitiesStr.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        return Arrays.stream(amenitiesStr.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    private List<String> parsePhotoDescriptions(String descriptionsStr) {
+        if (descriptionsStr == null || descriptionsStr.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        return Arrays.stream(descriptionsStr.split("\\|"))
+                .map(String::trim)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    private void validatePhotoFile(MultipartFile file) {
+        // Validate file size
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BadRequestException(
+                    String.format("File size exceeds maximum allowed size of %d MB", MAX_FILE_SIZE / (1024 * 1024))
+            );
+        }
+
+        // Validate content type
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new BadRequestException(
+                    String.format("Invalid file type. Allowed types: %s", String.join(", ", ALLOWED_CONTENT_TYPES))
+            );
+        }
     }
 
     /**

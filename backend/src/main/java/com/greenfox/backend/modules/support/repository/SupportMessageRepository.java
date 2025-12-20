@@ -65,5 +65,11 @@ public interface SupportMessageRepository extends JpaRepository<SupportMessage, 
     @Query("UPDATE SupportMessage m SET m.read = true " +
            "WHERE m.conversationId = :conversationId AND m.fromAdmin = false AND m.read = false")
     int markUserMessagesAsRead(@Param("conversationId") String conversationId);
+
+    /**
+     * Count unread messages for a specific conversation.
+     */
+    @Query("SELECT COUNT(m) FROM SupportMessage m WHERE m.conversationId = :conversationId AND m.fromAdmin = true AND m.read = false AND m.deleted = false")
+    long countUnreadInConversation(@Param("conversationId") String conversationId);
 }
 

@@ -11,7 +11,8 @@ import lombok.*;
 @Entity
 @Table(name = "support_messages", indexes = {
         @Index(name = "idx_support_user", columnList = "user_id"),
-        @Index(name = "idx_support_conversation", columnList = "conversation_id")
+        @Index(name = "idx_support_conversation", columnList = "conversation_id"),
+        @Index(name = "idx_support_category", columnList = "category")
 })
 @Getter
 @Setter
@@ -26,6 +27,12 @@ public class SupportMessage extends BaseEntity {
 
     @Column(name = "conversation_id", nullable = false)
     private String conversationId;
+
+    @Column(name = "subject", length = 200)
+    private String subject;
+
+    @Column(name = "category", length = 50)
+    private String category;
 
     @Column(name = "message", nullable = false, columnDefinition = "TEXT")
     private String message;
