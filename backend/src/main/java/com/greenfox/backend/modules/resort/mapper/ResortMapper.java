@@ -18,6 +18,7 @@ public interface ResortMapper {
 
     @Mapping(target = "mainPhotoUrl", expression = "java(getMainPhotoUrl(resort))")
     @Mapping(target = "promoPrice", ignore = true)
+    @Mapping(target = "distanceKm", expression = "java(resort.getDistanceKm())")
     ResortListResponse toListResponse(Resort resort);
 
     @Mapping(target = "id", ignore = true)

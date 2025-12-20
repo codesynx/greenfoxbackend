@@ -68,14 +68,14 @@ public class AuthService {
 
         // For test numbers, skip throttle check
         if (!otpService.isTestNumber(phoneNumber)) {
-            int throttleRemaining = otpService.getThrottleRemainingSeconds(phoneNumber);
-            if (throttleRemaining > 0) {
-                return OtpResponse.builder()
-                        .phoneNumber(maskPhone(phoneNumber))
-                        .expiresInSeconds(otpService.getOtpExpirationSeconds())
-                        .retryAfterSeconds(throttleRemaining)
-                        .message(String.format("Please wait %d seconds before requesting a new OTP", throttleRemaining))
-                        .build();
+        int throttleRemaining = otpService.getThrottleRemainingSeconds(phoneNumber);
+        if (throttleRemaining > 0) {
+            return OtpResponse.builder()
+                    .phoneNumber(maskPhone(phoneNumber))
+                    .expiresInSeconds(otpService.getOtpExpirationSeconds())
+                    .retryAfterSeconds(throttleRemaining)
+                    .message(String.format("Please wait %d seconds before requesting a new OTP", throttleRemaining))
+                    .build();
             }
         }
 

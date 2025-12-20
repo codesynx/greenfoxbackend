@@ -71,7 +71,7 @@ public class OtpService {
         
         // For real numbers, check throttle and generate OTP
         checkThrottle(phoneNumber);
-        
+
         // Generate random OTP
         StringBuilder otp = new StringBuilder();
         for (int i = 0; i < otpLength; i++) {
@@ -85,8 +85,8 @@ public class OtpService {
         
         try {
             if (redisAvailable) {
-                redisTemplate.opsForValue().set(key, otpCode, Duration.ofMinutes(otpExpirationMinutes));
-                redisTemplate.opsForValue().set(throttleKey, "1", Duration.ofSeconds(THROTTLE_SECONDS));
+        redisTemplate.opsForValue().set(key, otpCode, Duration.ofMinutes(otpExpirationMinutes));
+        redisTemplate.opsForValue().set(throttleKey, "1", Duration.ofSeconds(THROTTLE_SECONDS));
             } else {
                 throw new Exception("Redis unavailable");
             }
@@ -150,7 +150,7 @@ public class OtpService {
             // Delete OTP after successful verification
             try {
                 if (redisAvailable) {
-                    redisTemplate.delete(key);
+            redisTemplate.delete(key);
                 } else {
                     memoryOtpStore.remove(key);
                 }
@@ -174,8 +174,8 @@ public class OtpService {
         String throttleKey = THROTTLE_PREFIX + normalizePhone(phoneNumber);
         try {
             if (redisAvailable) {
-                Long ttl = redisTemplate.getExpire(throttleKey, TimeUnit.SECONDS);
-                return ttl != null && ttl > 0 ? ttl.intValue() : 0;
+        Long ttl = redisTemplate.getExpire(throttleKey, TimeUnit.SECONDS);
+        return ttl != null && ttl > 0 ? ttl.intValue() : 0;
             } else {
                 throw new Exception("Redis unavailable");
             }

@@ -3,6 +3,7 @@ package com.greenfox.backend.modules.resort.service;
 import com.greenfox.backend.common.dto.PageResponse;
 import com.greenfox.backend.common.exception.BadRequestException;
 import com.greenfox.backend.common.exception.ResourceNotFoundException;
+import com.greenfox.backend.common.service.StorageService;
 import com.greenfox.backend.modules.resort.dto.*;
 import com.greenfox.backend.modules.resort.entity.Resort;
 import com.greenfox.backend.modules.resort.mapper.ResortMapper;
@@ -13,7 +14,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -28,8 +31,13 @@ public class ResortService {
 
     private final ResortRepository resortRepository;
     private final ResortMapper resortMapper;
+    private final StorageService storageService;
 
     private static final int MAX_PHOTOS = 15;
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final List<String> ALLOWED_CONTENT_TYPES = List.of(
+            "image/jpeg", "image/jpg", "image/png", "image/webp"
+    );
 
     /**
      * Get paginated list of resorts with filters.
@@ -156,6 +164,79 @@ public class ResortService {
         log.info("Photos added to resort: {} ({})", saved.getName(), id);
 
         return resortMapper.toResponse(saved);
+    }
+
+    /**
+     * Upload a photo file to a resort (Admin only).
+     */
+    @Transactional
+    public PhotoUploadResponse uploadPhoto(UUID id, MultipartFile file, String description) throws IOException {
+        // Validate file
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("File is required");
+        }
+
+        // Validate file size
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BadRequestException(
+                    String.format("File size exceeds maximum allowed size of %d MB", MAX_FILE_SIZE / (1024 * 1024))
+            );
+        }
+
+        // Validate content type
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new BadRequestException(
+                    String.format("Invalid file type. Allowed types: %s", String.join(", ", ALLOWED_CONTENT_TYPES))
+            );
+        }
+
+        // Get resort
+        Resort resort = resortRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Resort", "id", id));
+
+        // Check photo limit
+        List<Resort.ResortPhoto> currentPhotos = resort.getPhotos() != null
+                ? new ArrayList<>(resort.getPhotos())
+                : new ArrayList<>();
+
+        if (currentPhotos.size() >= MAX_PHOTOS) {
+            throw new BadRequestException(
+                    String.format("Maximum %d photos allowed. Current: %d", MAX_PHOTOS, currentPhotos.size())
+            );
+        }
+
+        // Upload to GCP
+        String photoUrl = storageService.uploadFile(file, "resorts");
+        if (photoUrl == null) {
+            throw new IOException("Failed to upload file to cloud storage");
+        }
+
+        // Determine order (next available)
+        int nextOrder = currentPhotos.stream()
+                .mapToInt(Resort.ResortPhoto::getOrder)
+                .max()
+                .orElse(-1) + 1;
+
+        // Create photo entity
+        Resort.ResortPhoto photo = Resort.ResortPhoto.builder()
+                .url(photoUrl)
+                .description(description != null ? description.trim() : "")
+                .order(nextOrder)
+                .build();
+
+        // Add to resort
+        currentPhotos.add(photo);
+        resort.setPhotos(currentPhotos);
+        resortRepository.save(resort);
+
+        log.info("Photo uploaded to resort: {} ({}) - URL: {}", resort.getName(), id, photoUrl);
+
+        return PhotoUploadResponse.builder()
+                .url(photoUrl)
+                .description(photo.getDescription())
+                .order(photo.getOrder())
+                .build();
     }
 
     /**

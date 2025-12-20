@@ -2,6 +2,7 @@ package com.greenfox.backend.common.service;
 
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import lombok.extern.slf4j.Slf4j;
@@ -32,23 +33,55 @@ public class StorageService {
     /**
      * Initialize GCP storage client.
      * Called lazily on first use.
+     * Supports credentials via GOOGLE_APPLICATION_CREDENTIALS environment variable or default credentials.
      */
     private void initStorage() {
         if (initialized) return;
 
         try {
             if (projectId != null && !projectId.isBlank() && !projectId.startsWith("your-")) {
-                storage = StorageOptions.newBuilder()
-                        .setProjectId(projectId)
-                        .build()
-                        .getService();
-                initialized = true;
-                log.info("GCP Cloud Storage initialized for project: {}", projectId);
+                String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+                log.info("Initializing GCP Storage - Project ID: {}, Credentials: {}", 
+                        projectId, credentialsPath != null ? "Found at " + credentialsPath : "Not found (will use default)");
+                
+                StorageOptions.Builder builder = StorageOptions.newBuilder()
+                        .setProjectId(projectId);
+                
+                // GCP SDK will automatically use GOOGLE_APPLICATION_CREDENTIALS env var
+                // or try default application credentials
+                storage = builder.build().getService();
+                
+                // Test connection by trying to access bucket
+                try {
+                    Bucket bucket = storage.get(bucketName);
+                    if (bucket != null) {
+                        initialized = true;
+                        log.info("GCP Cloud Storage initialized successfully for project: {}, bucket: {}", projectId, bucketName);
+                    } else {
+                        log.error("Bucket '{}' not found in project '{}'", bucketName, projectId);
+                        initialized = false;
+                    }
+                } catch (com.google.cloud.storage.StorageException e) {
+                    if (e.getCode() == 401 || e.getCode() == 403) {
+                        log.error("Authentication failed for GCP. Check GOOGLE_APPLICATION_CREDENTIALS and service account permissions. " +
+                                "Service account needs 'Storage Admin' or 'Storage Object Creator' role for bucket '{}'. Error: {}", 
+                                bucketName, e.getMessage());
+                    } else if (e.getCode() == 404) {
+                        log.error("Bucket '{}' not found in project '{}'. Please create the bucket first.", bucketName, projectId);
+                    } else {
+                        log.error("Failed to access bucket '{}': {}", bucketName, e.getMessage());
+                    }
+                    initialized = false;
+                } catch (Exception e) {
+                    log.error("Unexpected error accessing bucket '{}': {}", bucketName, e.getMessage(), e);
+                    initialized = false;
+                }
             } else {
                 log.warn("GCP Cloud Storage not configured - using mock mode");
             }
         } catch (Exception e) {
-            log.error("Failed to initialize GCP Cloud Storage: {}", e.getMessage());
+            log.error("Failed to initialize GCP Cloud Storage: {}", e.getMessage(), e);
+            initialized = false;
         }
     }
 
@@ -71,8 +104,9 @@ public class StorageService {
      * @param contentType MIME type of the file
      * @param folder      Folder/prefix in bucket
      * @return Public URL of uploaded file
+     * @throws IOException if upload fails
      */
-    public String uploadBytes(byte[] bytes, String originalFilename, String contentType, String folder) {
+    public String uploadBytes(byte[] bytes, String originalFilename, String contentType, String folder) throws IOException {
         initStorage();
 
         String filename = generateFilename(originalFilename);
@@ -87,19 +121,24 @@ public class StorageService {
 
         try {
             BlobId blobId = BlobId.of(bucketName, objectName);
-            BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
-                    .setContentType(contentType)
-                    .build();
+            BlobInfo.Builder blobInfoBuilder = BlobInfo.newBuilder(blobId);
+            
+            if (contentType != null && !contentType.isBlank()) {
+                blobInfoBuilder.setContentType(contentType);
+            }
+            
+            BlobInfo blobInfo = blobInfoBuilder.build();
 
             storage.create(blobInfo, bytes);
 
+            // Generate public URL
             String publicUrl = String.format("https://storage.googleapis.com/%s/%s", bucketName, objectName);
-            log.info("File uploaded: {}", publicUrl);
+            log.info("File uploaded successfully: {}", publicUrl);
 
             return publicUrl;
         } catch (Exception e) {
-            log.error("Failed to upload file: {}", e.getMessage());
-            return null;
+            log.error("Failed to upload file to GCP: {}", e.getMessage(), e);
+            throw new IOException("Failed to upload file to cloud storage: " + e.getMessage(), e);
         }
     }
 
