@@ -6,6 +6,9 @@ import com.greenfox.backend.modules.resort.dto.*;
 import com.greenfox.backend.modules.resort.service.ResortService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -84,18 +87,32 @@ public class AdminResortController {
         return ResponseEntity.ok(ApiResponse.success(null, "Resort deleted successfully"));
     }
 
-    @PostMapping(value = "/{id}/photos/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/{id}/photos/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
-            summary = "Upload Photo",
-            description = "Upload a photo file to a resort. File will be automatically uploaded to GCP Cloud Storage and added to the resort. " +
-                         "Accepts multipart/form-data format. Supported image formats: JPEG, PNG, WebP. Maximum file size: 10MB. Maximum 15 photos per resort."
+            summary = "Upload Photo (Multipart File)",
+            description = "Upload a photo file to a resort using multipart/form-data. " +
+                         "The file will be automatically uploaded to GCP Cloud Storage and added to the resort. " +
+                         "Supported formats: JPEG, PNG, WebP. Maximum file size: 10MB. Maximum 15 photos per resort. " +
+                         "In Swagger UI, click 'Try it out' and use the 'Choose File' button to select an image."
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Multipart form data",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    schema = @Schema(type = "object", description = "Form data with file and optional description")
+            )
     )
     public ResponseEntity<ApiResponse<com.greenfox.backend.modules.resort.dto.PhotoUploadResponse>> uploadPhoto(
-            @Parameter(description = "Resort UUID", required = true)
+            @Parameter(description = "Resort UUID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable UUID id,
-            @Parameter(description = "Image file (JPEG, PNG, or WebP)", required = true)
+            @Parameter(
+                    description = "Image file to upload (JPEG, PNG, or WebP). In Swagger UI, use the file picker button.",
+                    required = true,
+                    content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            )
             @RequestParam("file") MultipartFile file,
-            @Parameter(description = "Optional photo description (e.g., 'Living room', 'Bedroom with view')")
+            @Parameter(description = "Optional photo description", example = "Living room with mountain view")
             @RequestParam(value = "description", required = false) String description) {
         try {
             com.greenfox.backend.modules.resort.dto.PhotoUploadResponse response = 
