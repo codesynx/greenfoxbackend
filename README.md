@@ -193,9 +193,59 @@ PENDING → PAID_WAITING → CONFIRMED → COMPLETED
 | `TWILIO_ACCOUNT_SID` | Twilio Account SID |
 | `TWILIO_AUTH_TOKEN` | Twilio Auth Token |
 | `TWILIO_PHONE_NUMBER` | Twilio Phone Number |
-| `GCP_PROJECT_ID` | GCP Project ID |
-| `GCP_BUCKET_NAME` | GCP Storage Bucket |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Path to GCP credentials |
+| `GCP_PROJECT_ID` | GCP Project ID (e.g., `my-project-12345`) |
+| `GCP_BUCKET_NAME` | GCP Storage Bucket name |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Path to GCP service account JSON key file (for local development) |
+| `GCP_SERVICE_ACCOUNT_JSON` | Full JSON content of service account key (for cloud deployments like Render) |
+
+### 🔧 GCP Cloud Storage Setup
+
+1. **Create a GCP Project** and enable Cloud Storage API
+2. **Create a Storage Bucket**: 
+   ```bash
+   gsutil mb -p YOUR_PROJECT_ID gs://greenfox-storage
+   ```
+3. **Make bucket publicly readable** (for image URLs):
+   
+   **Option A: Using gsutil (recommended)**:
+   ```bash
+   # Enable uniform bucket-level access (recommended for new buckets)
+   gsutil uniformbucketlevelaccess set on gs://greenfox-storage
+   
+   # Make bucket publicly readable
+   gsutil iam ch allUsers:objectViewer gs://greenfox-storage
+   ```
+   
+   **Option B: Using GCP Console**:
+   1. Go to Cloud Storage → Buckets → Select your bucket
+   2. Click "Permissions" tab
+   3. Click "Grant Access"
+   4. Add principal: `allUsers`
+   5. Select role: `Storage Object Viewer`
+   6. Save
+   
+   **Note**: The backend automatically sets public ACL on uploaded files. However, you must ensure the bucket itself allows public access for the URLs to work without authentication.
+4. **Create Service Account** and download JSON key:
+   - Go to IAM & Admin > Service Accounts
+   - Create service account with "Storage Admin" role
+   - Download JSON key file
+5. **For Local Development** - Set environment variable:
+   ```bash
+   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+   ```
+   
+6. **For Render Deployment**:
+   - Open your Render dashboard → Your Web Service → Environment
+   - Add a new environment variable:
+     - **Key**: `GCP_SERVICE_ACCOUNT_JSON`
+     - **Value**: Paste the entire contents of your JSON key file (all text from `{` to `}`)
+   - Render supports multiline values, so you can paste the entire JSON
+   - Also set:
+     - `GCP_PROJECT_ID` = `greenfox-481812` (or your project ID)
+     - `GCP_BUCKET_NAME` = `greenfox-storage` (or your bucket name)
+   - Save and redeploy your service
+   
+   **Important**: The application will automatically use `GCP_SERVICE_ACCOUNT_JSON` if available (for cloud), otherwise it falls back to `GOOGLE_APPLICATION_CREDENTIALS` (file path, for local development).
 
 ## 🚧 TODO
 
