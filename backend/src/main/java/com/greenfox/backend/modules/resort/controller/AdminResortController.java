@@ -169,16 +169,21 @@ public class AdminResortController {
         }
     }
 
+    // @Deprecated - Use POST /{id}/photos/upload instead for multipart file uploads
+    // This endpoint is kept for backward compatibility but not recommended for new integrations
     @PostMapping(value = "/{id}/photos", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
-            summary = "Add Photos (JSON)",
-            description = "Add photos to a resort using JSON with URLs (max 15 total). Accepts application/json."
+            summary = "[Deprecated] Add Photos (JSON URLs)",
+            description = "[DEPRECATED] Add photos to a resort using JSON with URLs (max 15 total). " +
+                         "This endpoint is deprecated. Please use POST /{id}/photos/upload for multipart file uploads instead. " +
+                         "Accepts application/json."
     )
+    @Deprecated
     public ResponseEntity<ApiResponse<ResortResponse>> addPhotos(
             @PathVariable UUID id,
             @Valid @RequestBody List<ResortPhotoRequest> photos) {
         ResortResponse resort = resortService.addPhotos(id, photos);
-        return ResponseEntity.ok(ApiResponse.success(resort, "Photos added successfully"));
+        return ResponseEntity.ok(ApiResponse.success(resort, "Photos added successfully (Note: Use /photos/upload endpoint for file uploads)"));
     }
 
     @DeleteMapping("/{id}/photos/{order}")

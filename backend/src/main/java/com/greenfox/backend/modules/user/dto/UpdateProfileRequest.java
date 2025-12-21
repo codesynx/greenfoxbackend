@@ -24,7 +24,6 @@ public class UpdateProfileRequest {
     @Schema(description = "User's email address", example = "aibek@example.kz")
     private String email;
 
-    @Schema(description = "URL to user's avatar image (or base64 for upload)")
-    private String avatarUrl;
+    // Note: Avatar upload is handled via separate endpoint: POST /api/v1/users/profile/avatar/upload
 }
 

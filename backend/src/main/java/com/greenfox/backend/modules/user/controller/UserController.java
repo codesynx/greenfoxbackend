@@ -48,7 +48,8 @@ public class UserController {
     @PatchMapping("/profile")
     @Operation(
             summary = "Update Profile",
-            description = "Update user's name and/or avatar. Phone number cannot be changed."
+            description = "Update user's name and/or email. Phone number cannot be changed. " +
+                         "Avatar upload is handled via separate endpoint: POST /api/v1/users/profile/avatar/upload"
     )
     public ResponseEntity<ApiResponse<UserProfileResponse>> updateProfile(
             @AuthenticationPrincipal UserPrincipal principal,

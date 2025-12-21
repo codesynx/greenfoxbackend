@@ -3,6 +3,7 @@ package com.greenfox.backend.modules.promo.service;
 import com.greenfox.backend.common.dto.PageResponse;
 import com.greenfox.backend.common.exception.BadRequestException;
 import com.greenfox.backend.common.exception.ResourceNotFoundException;
+import com.greenfox.backend.common.service.StorageService;
 import com.greenfox.backend.modules.promo.dto.CreatePromoRequest;
 import com.greenfox.backend.modules.promo.dto.PromoResponse;
 import com.greenfox.backend.modules.promo.entity.Promo;
@@ -15,7 +16,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -33,6 +36,13 @@ public class PromoService {
 
     private final PromoRepository promoRepository;
     private final ResortRepository resortRepository;
+    private final StorageService storageService;
+
+    // File upload constants
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final List<String> ALLOWED_CONTENT_TYPES = List.of(
+            "image/jpeg", "image/jpg", "image/png", "image/webp"
+    );
 
     /**
      * Get all currently active promos for homepage banners.
@@ -144,6 +154,54 @@ public class PromoService {
         }
 
         log.info("Promo deleted: {}", id);
+    }
+
+    /**
+     * Upload banner image for a promo (Admin only).
+     */
+    @Transactional
+    public PromoResponse uploadBanner(UUID id, MultipartFile file) throws IOException {
+        // Validate file
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("File is required");
+        }
+
+        // Validate file size
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BadRequestException(
+                    String.format("File size exceeds maximum allowed size of %d MB", MAX_FILE_SIZE / (1024 * 1024))
+            );
+        }
+
+        // Validate content type
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new BadRequestException(
+                    String.format("Invalid file type. Allowed types: %s", String.join(", ", ALLOWED_CONTENT_TYPES))
+            );
+        }
+
+        // Get promo
+        Promo promo = promoRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Promo", "id", id));
+
+        // Delete old banner if exists and is a cloud URL
+        if (promo.getBannerImageUrl() != null && promo.getBannerImageUrl().startsWith("http")) {
+            storageService.deleteFile(promo.getBannerImageUrl());
+        }
+
+        // Upload to GCP
+        String bannerUrl = storageService.uploadFile(file, "promos");
+        if (bannerUrl == null) {
+            throw new IOException("Failed to upload file to cloud storage");
+        }
+
+        promo.setBannerImageUrl(bannerUrl);
+        Promo saved = promoRepository.save(promo);
+
+        log.info("Banner uploaded for promo: {} ({}) - URL: {}", saved.getId(), id, bannerUrl);
+
+        return toResponse(saved);
     }
 
     private PromoResponse toResponse(Promo promo) {

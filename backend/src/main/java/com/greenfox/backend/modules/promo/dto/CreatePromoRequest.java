@@ -39,7 +39,7 @@ public class CreatePromoRequest {
     private LocalDate endDate;
 
     @Size(max = 500, message = "Banner URL must not exceed 500 characters")
-    @Schema(description = "Banner image URL")
+    @Schema(description = "Banner image URL (optional - can be uploaded separately via /{id}/banner/upload endpoint)")
     private String bannerImageUrl;
 
     @Size(max = 200, message = "Title must not exceed 200 characters")

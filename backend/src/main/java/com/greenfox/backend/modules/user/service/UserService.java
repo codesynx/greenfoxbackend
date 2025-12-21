@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -58,40 +57,7 @@ public class UserService {
             user.setEmail(request.getEmail().trim().toLowerCase());
         }
 
-        if (request.getAvatarUrl() != null) {
-            String avatarData = request.getAvatarUrl();
-            if (avatarData.startsWith("data:image")) {
-                // Handle base64 upload
-                try {
-                    String[] parts = avatarData.split(",");
-                    String metadata = parts[0];
-                    String base64Content = parts[1];
-                    String contentType = metadata.substring(metadata.indexOf(":") + 1, metadata.indexOf(";"));
-                    String extension = contentType.substring(contentType.indexOf("/") + 1);
-                    
-                    byte[] decodedBytes = Base64.getDecoder().decode(base64Content);
-                    
-                    // Delete old avatar if exists and is a cloud URL
-                    if (user.getAvatarUrl() != null && user.getAvatarUrl().startsWith("http")) {
-                        storageService.deleteFile(user.getAvatarUrl());
-                    }
-                    
-                    String newUrl = storageService.uploadBytes(
-                            decodedBytes, 
-                            "avatar." + extension, 
-                            contentType, 
-                            "avatars"
-                    );
-                    user.setAvatarUrl(newUrl);
-                } catch (Exception e) {
-                    log.error("Failed to process avatar base64 data", e);
-                    throw new BadRequestException("Invalid avatar image data");
-                }
-            } else {
-                // Just update the URL if it's already a link
-                user.setAvatarUrl(avatarData);
-            }
-        }
+        // Note: Avatar upload is handled via separate endpoint: POST /api/v1/users/profile/avatar/upload
 
         User savedUser = userRepository.save(user);
         log.info("Profile updated for user: {}", principal.getId());
