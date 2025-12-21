@@ -1,0 +1,19 @@
+# GCP Service Account Credentials
+*.json
+!package.json
+!package-lock.json
+!GreenFox_API_Postman_Collection.json
+greenfox-*-*.json
+
+# Environment files
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
