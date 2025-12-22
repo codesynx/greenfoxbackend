@@ -31,6 +31,9 @@ public class StorageService {
     @Value("${app.gcp.bucket-name:greenfox-storage}")
     private String bucketName;
 
+    @Value("${app.gcp.service-account-json:}")
+    private String serviceAccountJson;
+
     private Storage storage;
     private boolean initialized = false;
 
@@ -46,9 +49,8 @@ public class StorageService {
             if (projectId != null && !projectId.isBlank() && !projectId.startsWith("your-")) {
                 StorageOptions.Builder builder = StorageOptions.newBuilder()
                         .setProjectId(projectId);
-                
-                // Check for JSON credentials in environment variable (for Render/cloud deployments)
-                String serviceAccountJson = System.getenv("GCP_SERVICE_ACCOUNT_JSON");
+
+                // Check for JSON credentials in environment variable (for Digital Ocean/cloud deployments)
                 if (serviceAccountJson != null && !serviceAccountJson.isBlank()) {
                     try {
                         GoogleCredentials credentials = GoogleCredentials.fromStream(
