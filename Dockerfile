@@ -10,13 +10,8 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
-# Environment variables with default values
-# These will be overridden by Digital Ocean environment variables
-ENV SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/greenfox
-ENV SPRING_DATASOURCE_USERNAME=postgres
-ENV SPRING_DATASOURCE_PASSWORD=postgres
-ENV SPRING_DATA_REDIS_HOST=localhost
-ENV SPRING_DATA_REDIS_PORT=6379
+# All environment variables should be set in Digital Ocean App Platform
+# Do not hardcode them here as they will override the runtime configuration
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
