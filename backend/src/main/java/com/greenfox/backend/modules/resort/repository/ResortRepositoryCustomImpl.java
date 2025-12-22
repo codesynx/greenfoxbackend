@@ -26,7 +26,7 @@ public class ResortRepositoryCustomImpl implements ResortRepositoryCustom {
         StringBuilder sql = new StringBuilder("SELECT r.* ");
         StringBuilder countSql = new StringBuilder("SELECT COUNT(*) ");
         
-        StringBuilder commonSql = new StringBuilder("FROM resorts r WHERE r.deleted = false AND r.is_active = true ");
+        StringBuilder commonSql = new StringBuilder("FROM resorts r WHERE r.is_deleted = false AND r.is_active = true ");
         Map<String, Object> params = new HashMap<>();
 
         // 1. Dynamic Filters
