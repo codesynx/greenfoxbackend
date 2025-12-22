@@ -40,7 +40,7 @@ public class OpenApiConfig {
                                 .url("https://greenfox.kz")))
                 .servers(List.of(
                         new Server()
-                                .url("https://greenfox-backend.onrender.com")
+                                .url("https://octopus-app-6egtt.ondigitalocean.app")
                                 .description("Production Server"),
                         new Server()
                                 .url("http://localhost:" + serverPort)

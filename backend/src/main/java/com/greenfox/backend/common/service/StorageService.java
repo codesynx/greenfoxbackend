@@ -1,7 +1,6 @@
 package com.greenfox.backend.common.service;
 
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.storage.Acl;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
@@ -147,10 +146,10 @@ public class StorageService {
             if (contentType != null && !contentType.isBlank()) {
                 blobInfoBuilder.setContentType(contentType);
             }
-            
-            // Make the file publicly readable
-            blobInfoBuilder.setAcl(java.util.List.of(Acl.of(Acl.User.ofAllUsers(), Acl.Role.READER)));
-            
+
+            // Note: Public access is controlled at bucket level via uniform bucket-level access
+            // Do not set ACLs when uniform bucket-level access is enabled
+
             BlobInfo blobInfo = blobInfoBuilder.build();
 
             storage.create(blobInfo, bytes);
