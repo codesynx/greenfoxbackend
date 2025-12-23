@@ -58,7 +58,18 @@ public class AdminPromoController {
             description = "Create a new promotional offer for a resort"
     )
     public ResponseEntity<ApiResponse<PromoResponse>> createPromo(
-            @Valid @RequestBody CreatePromoRequest request) {
+            @Valid @RequestBody CreatePromoRequest request,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        // Log incoming request details
+        System.out.println("=== CREATE PROMO ENDPOINT HIT ===");
+        System.out.println("Content-Type: " + httpRequest.getContentType());
+        System.out.println("Request Object: " + request);
+        System.out.println("ResortId: " + request.getResortId());
+        System.out.println("DiscountPercent: " + request.getDiscountPercent());
+        System.out.println("StartDate: " + request.getStartDate());
+        System.out.println("EndDate: " + request.getEndDate());
+        System.out.println("================================");
+
         PromoResponse promo = promoService.createPromo(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
