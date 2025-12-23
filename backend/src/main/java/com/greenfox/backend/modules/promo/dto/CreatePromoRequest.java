@@ -34,7 +34,7 @@ public class CreatePromoRequest {
     private LocalDate startDate;
 
     @NotNull(message = "End date is required")
-    @Future(message = "End date must be in the future")
+    @FutureOrPresent(message = "End date must be today or in the future")
     @Schema(description = "Promotion end date")
     private LocalDate endDate;
 
