@@ -98,6 +98,10 @@ public class PromoService {
      */
     @Transactional
     public PromoResponse createPromo(CreatePromoRequest request) {
+        log.info("Creating promo with request: resortId={}, discountPercent={}, startDate={}, endDate={}, title={}, description={}",
+                request.getResortId(), request.getDiscountPercent(), request.getStartDate(),
+                request.getEndDate(), request.getTitle(), request.getDescription());
+
         // Validate dates
         if (request.getEndDate().isBefore(request.getStartDate())) {
             throw new BadRequestException("End date must be after start date");

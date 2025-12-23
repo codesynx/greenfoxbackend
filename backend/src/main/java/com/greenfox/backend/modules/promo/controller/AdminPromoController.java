@@ -52,7 +52,7 @@ public class AdminPromoController {
         return ResponseEntity.ok(ApiResponse.success(promos));
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Create Promo",
             description = "Create a new promotional offer for a resort"
