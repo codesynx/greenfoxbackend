@@ -6,6 +6,7 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,10 +20,14 @@ import java.util.UUID;
 /**
  * Service for file storage operations using GCP Cloud Storage.
  * Falls back to local mock storage in development.
+ * Automatically compresses images before upload to save storage and bandwidth.
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class StorageService {
+
+    private final ImageProcessingService imageProcessingService;
 
     @Value("${app.gcp.project-id:}")
     private String projectId;
@@ -107,13 +112,39 @@ public class StorageService {
 
     /**
      * Upload a file to cloud storage.
+     * Images are automatically compressed before upload to save storage and bandwidth.
      *
      * @param file     MultipartFile to upload
      * @param folder   Folder/prefix in bucket (e.g., "avatars", "resorts")
      * @return Public URL of uploaded file, or mock URL in dev mode
      */
     public String uploadFile(MultipartFile file, String folder) throws IOException {
-        return uploadBytes(file.getBytes(), file.getOriginalFilename(), file.getContentType(), folder);
+        byte[] bytesToUpload;
+        String contentType = file.getContentType();
+
+        // Check if file is an image
+        if (isImage(contentType)) {
+            // Process and compress image
+            log.debug("Processing image before upload: {}", file.getOriginalFilename());
+            bytesToUpload = imageProcessingService.processImage(file);
+        } else {
+            // Non-image files are uploaded as-is
+            bytesToUpload = file.getBytes();
+        }
+
+        return uploadBytes(bytesToUpload, file.getOriginalFilename(), contentType, folder);
+    }
+
+    /**
+     * Check if content type is an image.
+     */
+    private boolean isImage(String contentType) {
+        return contentType != null && (
+            contentType.equals("image/jpeg") ||
+            contentType.equals("image/jpg") ||
+            contentType.equals("image/png") ||
+            contentType.equals("image/webp")
+        );
     }
 
     /**

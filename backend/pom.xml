@@ -89,6 +89,13 @@
 			<artifactId>google-cloud-storage</artifactId>
 			<version>2.45.0</version>
 		</dependency>
+
+		<!-- Image Processing / Compression -->
+		<dependency>
+			<groupId>net.coobird</groupId>
+			<artifactId>thumbnailator</artifactId>
+			<version>0.4.20</version>
+		</dependency>
 		
 		<!-- OpenAPI / Swagger -->
 		<dependency>
