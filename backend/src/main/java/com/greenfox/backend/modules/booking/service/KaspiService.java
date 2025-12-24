@@ -38,9 +38,9 @@ public class KaspiService {
             String orderId = "GF-" + bookingId.toString().substring(0, 8).toUpperCase();
             String encodedCallback = URLEncoder.encode(callbackUrl, StandardCharsets.UTF_8);
             
-            // Format: https://kaspi.kz/pay/merchant?merchant={merchantId}&order={orderId}&amount={amount}&callback={callback}
+            // Format: kaspi://pay?merchant={merchantId}&order={orderId}&amount={amount}&callback={callback}
             String deepLink = String.format(
-                    "https://kaspi.kz/pay/merchant?merchant=%s&order=%s&amount=%s&callback=%s",
+                    "kaspi://pay?merchant=%s&order=%s&amount=%s&callback=%s",
                     merchantId,
                     orderId,
                     amount.toBigInteger(),
@@ -75,3 +75,4 @@ public class KaspiService {
         return true;
     }
 }
+
