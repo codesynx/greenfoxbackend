@@ -51,7 +51,7 @@ public class ResortRepositoryCustomImpl implements ResortRepositoryCustom {
         }
 
         if (filter.getQuery() != null && !filter.getQuery().isBlank()) {
-            commonSql.append("AND (LOWER(r.name) LIKE LOWER(:query) OR LOWER(r.city) LIKE LOWER(:query)) ");
+            commonSql.append("AND (LOWER(r.name) LIKE LOWER(:query) OR LOWER(r.description) LIKE LOWER(:query) OR LOWER(r.city) LIKE LOWER(:query)) ");
             params.put("query", "%" + filter.getQuery() + "%");
         }
 
@@ -107,4 +107,3 @@ public class ResortRepositoryCustomImpl implements ResortRepositoryCustom {
         return new PageImpl<>(content, pageable, total);
     }
 }
-
