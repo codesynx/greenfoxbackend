@@ -36,6 +36,11 @@ public class Resort extends BaseEntity {
     @Column(name = "name", nullable = false, length = 200)
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false, length = 50)
+    @Builder.Default
+    private ResortType type = ResortType.RESORT;
+
     @Column(name = "city", nullable = false, length = 100)
     private String city;
 

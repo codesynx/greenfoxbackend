@@ -1,6 +1,7 @@
 package com.greenfox.backend.modules.resort.dto;
 
 import com.greenfox.backend.modules.resort.entity.Resort;
+import com.greenfox.backend.modules.resort.entity.ResortType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,6 +28,9 @@ public class ResortResponse {
 
     @Schema(description = "Resort name")
     private String name;
+
+    @Schema(description = "Resort type")
+    private ResortType type;
 
     @Schema(description = "City where resort is located")
     private String city;

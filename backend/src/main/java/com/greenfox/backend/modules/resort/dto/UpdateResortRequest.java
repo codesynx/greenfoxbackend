@@ -1,5 +1,6 @@
 package com.greenfox.backend.modules.resort.dto;
 
+import com.greenfox.backend.modules.resort.entity.ResortType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,9 @@ public class UpdateResortRequest {
     @Size(min = 2, max = 200, message = "Name must be between 2 and 200 characters")
     @Schema(description = "Resort name")
     private String name;
+
+    @Schema(description = "Resort type")
+    private ResortType type;
 
     @Size(max = 100, message = "City must not exceed 100 characters")
     @Schema(description = "City location")
