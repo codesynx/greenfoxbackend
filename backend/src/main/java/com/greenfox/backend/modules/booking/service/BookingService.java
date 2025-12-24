@@ -227,7 +227,7 @@ public class BookingService {
         // In real implementation, verify with Kaspi
         // boolean verified = kaspiService.verifyPayment(booking.getKaspiInvoiceId());
 
-        booking.setStatus(BookingStatus.PAID_WAITING);
+        booking.setStatus(BookingStatus.CONFIRMED);
         booking.setPaymentConfirmedAt(LocalDateTime.now());
         Booking saved = bookingRepository.save(booking);
 
@@ -360,6 +360,7 @@ public class BookingService {
 
         return BookingResponse.builder()
                 .id(booking.getId())
+                .bookingId(booking.getId())
                 .resortId(resort.getId())
                 .resortName(resort.getName())
                 .resortCity(resort.getCity())
@@ -382,4 +383,3 @@ public class BookingService {
                 .build();
     }
 }
-

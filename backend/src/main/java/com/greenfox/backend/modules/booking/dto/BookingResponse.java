@@ -25,6 +25,9 @@ public class BookingResponse {
     @Schema(description = "Booking unique identifier")
     private UUID id;
 
+    @Schema(description = "Booking unique identifier (alias for id)")
+    private UUID bookingId;
+
     // Resort info
     @Schema(description = "Resort ID")
     private UUID resortId;
@@ -89,4 +92,3 @@ public class BookingResponse {
     @Schema(description = "Payment confirmation time")
     private LocalDateTime paymentConfirmedAt;
 }
-
