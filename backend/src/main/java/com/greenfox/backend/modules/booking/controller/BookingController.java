@@ -70,6 +70,19 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success(response, "Payment confirmed. Awaiting admin confirmation."));
     }
 
+    @PostMapping("/{id}/cancel")
+    @Operation(
+            summary = "Cancel Booking",
+            description = "Request cancellation of a booking"
+    )
+    public ResponseEntity<ApiResponse<BookingResponse>> cancelBooking(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody CancelBookingRequest request) {
+        BookingResponse response = bookingService.cancelBooking(id, principal, request);
+        return ResponseEntity.ok(ApiResponse.success(response, "Cancellation requested successfully"));
+    }
+
     @GetMapping("/my")
     @Operation(
             summary = "Get My Bookings",
@@ -95,4 +108,3 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
-

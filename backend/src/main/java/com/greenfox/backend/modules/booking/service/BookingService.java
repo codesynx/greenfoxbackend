@@ -273,6 +273,39 @@ public class BookingService {
         return toResponse(booking);
     }
 
+    /**
+     * Request booking cancellation.
+     */
+    @Transactional
+    public BookingResponse cancelBooking(UUID bookingId, UserPrincipal principal, CancelBookingRequest request) {
+        Booking booking = bookingRepository.findByIdAndUserIdAndDeletedFalse(bookingId, principal.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
+
+        if (booking.getStatus() == BookingStatus.CANCELLED || 
+            booking.getStatus() == BookingStatus.COMPLETED ||
+            booking.getStatus() == BookingStatus.CANCELLATION_REQUESTED) {
+            throw new BadRequestException("Booking cannot be cancelled");
+        }
+
+        booking.setStatus(BookingStatus.CANCELLATION_REQUESTED);
+        booking.setCancellationReason(request.getReason());
+        Booking saved = bookingRepository.save(booking);
+
+        log.info("Cancellation requested for booking: {}", bookingId);
+
+        // Notify admin
+        notificationService.createAdminNotification(
+                "Cancellation requested for booking: " + booking.getResort().getName(),
+                saved.getId()
+        );
+
+        // Notify user
+        notificationService.createBookingNotification(saved, 
+                "Your cancellation request is being processed.");
+
+        return toResponse(saved);
+    }
+
     // ============== Admin Operations ==============
 
     /**
@@ -320,10 +353,10 @@ public class BookingService {
 
         // Send notification to user
         String message = switch (newStatus) {
-            case CONFIRMED -> "Your booking has been confirmed! See you soon.";
-            case COMPLETED -> "Thank you for staying with us!";
-            case CANCELLED -> "Your booking has been cancelled.";
-            default -> "Booking status updated to: " + newStatus;
+            case CONFIRMED -> "notifications.booking.confirmed";
+            case COMPLETED -> "notifications.booking.completed";
+            case CANCELLED -> "notifications.booking.cancelled";
+            default -> "notifications.booking.updated";
         };
         notificationService.createBookingNotification(saved, message);
 
@@ -344,6 +377,7 @@ public class BookingService {
             case PENDING -> newStatus == BookingStatus.CANCELLED;
             case PAID_WAITING -> newStatus == BookingStatus.CONFIRMED || newStatus == BookingStatus.CANCELLED;
             case CONFIRMED -> newStatus == BookingStatus.COMPLETED || newStatus == BookingStatus.CANCELLED;
+            case CANCELLATION_REQUESTED -> newStatus == BookingStatus.CANCELLED || newStatus == BookingStatus.CONFIRMED;
             case COMPLETED, CANCELLED -> false;
         };
 

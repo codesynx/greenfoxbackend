@@ -93,6 +93,10 @@ public class Booking extends BaseEntity {
     @Column(name = "admin_notes", columnDefinition = "TEXT")
     private String adminNotes;
 
+    // Cancellation info
+    @Column(name = "cancellation_reason", columnDefinition = "TEXT")
+    private String cancellationReason;
+
     /**
      * Booking statuses with their flow.
      */
@@ -101,7 +105,8 @@ public class Booking extends BaseEntity {
         PAID_WAITING,   // Payment received, awaiting admin confirmation
         CONFIRMED,      // Admin confirmed the booking
         COMPLETED,      // Stay completed
-        CANCELLED       // Booking cancelled
+        CANCELLED,      // Booking cancelled
+        CANCELLATION_REQUESTED // User requested cancellation
     }
 
     /**
@@ -120,4 +125,3 @@ public class Booking extends BaseEntity {
         private String specialRequests;
     }
 }
-
