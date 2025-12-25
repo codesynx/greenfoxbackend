@@ -92,15 +92,20 @@ public class BookingService {
 
         int discountPercent = 0;
         BigDecimal discountAmount = BigDecimal.ZERO;
-        BigDecimal totalPrice = baseTotal;
+        BigDecimal discountedBase = baseTotal;
 
         if (activePromo.isPresent()) {
             discountPercent = activePromo.get().getDiscountPercent();
             discountAmount = baseTotal
                     .multiply(BigDecimal.valueOf(discountPercent))
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-            totalPrice = baseTotal.subtract(discountAmount);
+            discountedBase = baseTotal.subtract(discountAmount);
         }
+
+        // Calculate tax (10% of discounted base)
+        BigDecimal taxAmount = discountedBase.multiply(BigDecimal.valueOf(0.10))
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalPrice = discountedBase.add(taxAmount);
 
         return BookingCalcResponse.builder()
                 .resortId(resort.getId())
@@ -154,15 +159,20 @@ public class BookingService {
 
         int discountPercent = 0;
         BigDecimal discountAmount = BigDecimal.ZERO;
-        BigDecimal totalPrice = baseTotal;
+        BigDecimal discountedBase = baseTotal;
 
         if (activePromo.isPresent()) {
             discountPercent = activePromo.get().getDiscountPercent();
             discountAmount = baseTotal
                     .multiply(BigDecimal.valueOf(discountPercent))
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-            totalPrice = baseTotal.subtract(discountAmount);
+            discountedBase = baseTotal.subtract(discountAmount);
         }
+
+        // Calculate tax (10% of discounted base)
+        BigDecimal taxAmount = discountedBase.multiply(BigDecimal.valueOf(0.10))
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalPrice = discountedBase.add(taxAmount);
 
         // Create guest info
         Booking.GuestInfo guestInfo = Booking.GuestInfo.builder()

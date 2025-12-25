@@ -80,7 +80,7 @@ public class NotificationService {
         Notification notification = Notification.builder()
                 .user(booking.getUser())
                 .type(type)
-                .title("Booking Update: " + booking.getResort().getName())
+                .title(booking.getResort().getName())
                 .message(message)
                 .referenceId(booking.getId())
                 .referenceType("BOOKING")
