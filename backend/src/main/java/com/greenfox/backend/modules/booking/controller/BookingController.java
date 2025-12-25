@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -94,5 +95,18 @@ public class BookingController {
         BookingResponse response = bookingService.getUserBooking(id, principal);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
-}
 
+    @PostMapping("/{id}/cancel")
+    @Operation(
+            summary = "Cancel Booking",
+            description = "Request cancellation of a booking"
+    )
+    public ResponseEntity<ApiResponse<Void>> cancelBooking(
+            @PathVariable UUID id,
+            @RequestBody Map<String, String> payload,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        String reason = payload.get("reason");
+        bookingService.cancelBooking(id, reason, principal);
+        return ResponseEntity.ok(ApiResponse.success(null, "Cancellation requested"));
+    }
+}

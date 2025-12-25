@@ -53,10 +53,12 @@ public class Notification extends BaseEntity {
         BOOKING_CREATED,
         BOOKING_PAID,
         BOOKING_CONFIRMED,
+        BOOKING_REJECTED,
         BOOKING_COMPLETED,
         BOOKING_CANCELLED,
+        CANCELLATION_UNDER_REVIEW,
+        REFUND_PROCESSED,
         PROMO_NEW,
         SYSTEM
     }
 }
-

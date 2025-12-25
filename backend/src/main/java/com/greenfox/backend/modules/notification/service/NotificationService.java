@@ -71,6 +71,8 @@ public class NotificationService {
             case PENDING -> NotificationType.BOOKING_CREATED;
             case PAID_WAITING -> NotificationType.BOOKING_PAID;
             case CONFIRMED -> NotificationType.BOOKING_CONFIRMED;
+            case REJECTED -> NotificationType.BOOKING_REJECTED;
+            case CANCELLATION_PENDING -> NotificationType.CANCELLATION_UNDER_REVIEW;
             case COMPLETED -> NotificationType.BOOKING_COMPLETED;
             case CANCELLED -> NotificationType.BOOKING_CANCELLED;
         };
@@ -139,4 +141,3 @@ public class NotificationService {
                 .build();
     }
 }
-

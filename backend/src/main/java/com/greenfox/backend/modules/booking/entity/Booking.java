@@ -79,6 +79,9 @@ public class Booking extends BaseEntity {
     @Builder.Default
     private BookingStatus status = BookingStatus.PENDING;
 
+    @Column(name = "cancellation_reason", length = 500)
+    private String cancellationReason;
+
     // Payment info
     @Column(name = "kaspi_invoice_id", length = 100)
     private String kaspiInvoiceId;
@@ -97,11 +100,13 @@ public class Booking extends BaseEntity {
      * Booking statuses with their flow.
      */
     public enum BookingStatus {
-        PENDING,        // Just created, awaiting payment
-        PAID_WAITING,   // Payment received, awaiting admin confirmation
-        CONFIRMED,      // Admin confirmed the booking
-        COMPLETED,      // Stay completed
-        CANCELLED       // Booking cancelled
+        PENDING,            // Initial state after payment/request (not automatically confirmed)
+        PAID_WAITING,       // Deprecated or used for payment processing
+        CONFIRMED,          // Approved by Admin
+        REJECTED,           // Denied by Admin
+        CANCELLATION_PENDING, // User requested cancellation
+        COMPLETED,          // Stay completed
+        CANCELLED           // Final cancellation
     }
 
     /**
@@ -120,4 +125,3 @@ public class Booking extends BaseEntity {
         private String specialRequests;
     }
 }
-

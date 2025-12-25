@@ -188,7 +188,7 @@ public class BookingService {
                 .discountAmount(discountAmount)
                 .totalPrice(totalPrice)
                 .nights(nights)
-                .status(request.getPaymentMethod() != null ? BookingStatus.CONFIRMED : BookingStatus.PENDING)
+                .status(BookingStatus.PENDING)
                 .paymentConfirmedAt(request.getPaymentMethod() != null ? LocalDateTime.now() : null)
                 .build();
 
@@ -207,7 +207,7 @@ public class BookingService {
                 saved.getId(), resort.getName(), user.getPhoneNumber());
 
         // Create notification for user
-        notificationService.createBookingNotification(saved, "Booking created. Please complete payment.");
+        notificationService.createBookingNotification(saved, "notification.booking.created");
 
         return toResponse(saved);
     }
@@ -297,6 +297,34 @@ public class BookingService {
     }
 
     /**
+     * Request booking cancellation.
+     */
+    @Transactional
+    public void cancelBooking(UUID bookingId, String reason, UserPrincipal principal) {
+        Booking booking = bookingRepository.findByIdAndUserIdAndDeletedFalse(bookingId, principal.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
+
+        if (booking.getStatus() != BookingStatus.PENDING && booking.getStatus() != BookingStatus.CONFIRMED) {
+            throw new BadRequestException("Only PENDING or CONFIRMED bookings can be cancelled");
+        }
+
+        booking.setStatus(BookingStatus.CANCELLATION_PENDING);
+        booking.setCancellationReason(reason);
+        Booking saved = bookingRepository.save(booking);
+
+        log.info("Booking cancellation requested: {}", bookingId);
+
+        // Notify user
+        notificationService.createBookingNotification(saved, "notification.booking.cancellation_under_review");
+        
+        // Notify admin
+        notificationService.createAdminNotification(
+                "Cancellation requested for booking: " + booking.getResort().getName(),
+                saved.getId()
+        );
+    }
+
+    /**
      * Update booking status (Admin only).
      */
     @Transactional
@@ -320,9 +348,10 @@ public class BookingService {
 
         // Send notification to user
         String message = switch (newStatus) {
-            case CONFIRMED -> "Your booking has been confirmed! See you soon.";
-            case COMPLETED -> "Thank you for staying with us!";
-            case CANCELLED -> "Your booking has been cancelled.";
+            case CONFIRMED -> "notification.booking.confirmed";
+            case REJECTED -> "notification.booking.rejected";
+            case COMPLETED -> "notification.booking.completed";
+            case CANCELLED -> "notification.booking.refund_processed";
             default -> "Booking status updated to: " + newStatus;
         };
         notificationService.createBookingNotification(saved, message);
@@ -341,10 +370,11 @@ public class BookingService {
 
     private void validateStatusTransition(BookingStatus current, BookingStatus newStatus) {
         boolean valid = switch (current) {
-            case PENDING -> newStatus == BookingStatus.CANCELLED;
-            case PAID_WAITING -> newStatus == BookingStatus.CONFIRMED || newStatus == BookingStatus.CANCELLED;
-            case CONFIRMED -> newStatus == BookingStatus.COMPLETED || newStatus == BookingStatus.CANCELLED;
-            case COMPLETED, CANCELLED -> false;
+            case PENDING -> newStatus == BookingStatus.CONFIRMED || newStatus == BookingStatus.REJECTED || newStatus == BookingStatus.CANCELLED || newStatus == BookingStatus.CANCELLATION_PENDING;
+            case PAID_WAITING -> newStatus == BookingStatus.CONFIRMED || newStatus == BookingStatus.REJECTED || newStatus == BookingStatus.CANCELLED;
+            case CONFIRMED -> newStatus == BookingStatus.COMPLETED || newStatus == BookingStatus.CANCELLATION_PENDING || newStatus == BookingStatus.CANCELLED;
+            case CANCELLATION_PENDING -> newStatus == BookingStatus.CANCELLED || newStatus == BookingStatus.CONFIRMED || newStatus == BookingStatus.REJECTED;
+            case REJECTED, COMPLETED, CANCELLED -> false;
         };
 
         if (!valid) {
