@@ -73,7 +73,6 @@ public class NotificationService {
             case CONFIRMED -> NotificationType.BOOKING_CONFIRMED;
             case COMPLETED -> NotificationType.BOOKING_COMPLETED;
             case CANCELLED -> NotificationType.BOOKING_CANCELLED;
-            case CANCELLATION_REQUESTED -> NotificationType.SYSTEM;
         };
 
         Notification notification = Notification.builder()
@@ -140,3 +139,4 @@ public class NotificationService {
                 .build();
     }
 }
+
