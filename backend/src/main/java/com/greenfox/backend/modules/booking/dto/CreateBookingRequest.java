@@ -68,5 +68,16 @@ public class CreateBookingRequest {
     @Size(max = 1000, message = "Special requests must not exceed 1000 characters")
     @Schema(description = "Special requests or notes")
     private String specialRequests;
-}
 
+    @Schema(description = "Payment method details")
+    private PaymentMethod paymentMethod;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PaymentMethod {
+        private String type;
+        private String cardToken;
+        private String last4;
+    }
+}

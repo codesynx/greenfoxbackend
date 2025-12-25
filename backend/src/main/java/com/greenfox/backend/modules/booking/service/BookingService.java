@@ -188,7 +188,8 @@ public class BookingService {
                 .discountAmount(discountAmount)
                 .totalPrice(totalPrice)
                 .nights(nights)
-                .status(BookingStatus.PENDING)
+                .status(request.getPaymentMethod() != null ? BookingStatus.CONFIRMED : BookingStatus.PENDING)
+                .paymentConfirmedAt(request.getPaymentMethod() != null ? LocalDateTime.now() : null)
                 .build();
 
         // Generate Kaspi payment info
@@ -382,4 +383,3 @@ public class BookingService {
                 .build();
     }
 }
-
