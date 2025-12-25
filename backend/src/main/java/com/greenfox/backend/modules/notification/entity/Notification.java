@@ -46,6 +46,9 @@ public class Notification extends BaseEntity {
     @Builder.Default
     private boolean read = false;
 
+    @Column(name = "metadata", columnDefinition = "TEXT")
+    private String metadata;
+
     /**
      * Notification types.
      */

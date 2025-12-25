@@ -1,5 +1,7 @@
 package com.greenfox.backend.modules.notification.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greenfox.backend.common.dto.PageResponse;
 import com.greenfox.backend.modules.booking.entity.Booking;
 import com.greenfox.backend.modules.notification.dto.NotificationResponse;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -29,6 +32,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
 
     /**
      * Get user's notifications.
@@ -77,6 +81,14 @@ public class NotificationService {
             case CANCELLED -> NotificationType.BOOKING_CANCELLED;
         };
 
+        Map<String, Object> metadataMap = Map.of("resortName", booking.getResort().getName());
+        String metadataJson = null;
+        try {
+            metadataJson = objectMapper.writeValueAsString(metadataMap);
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing metadata", e);
+        }
+
         Notification notification = Notification.builder()
                 .user(booking.getUser())
                 .type(type)
@@ -84,6 +96,7 @@ public class NotificationService {
                 .message(message)
                 .referenceId(booking.getId())
                 .referenceType("BOOKING")
+                .metadata(metadataJson)
                 .build();
 
         notificationRepository.save(notification);
@@ -129,6 +142,15 @@ public class NotificationService {
     }
 
     private NotificationResponse toResponse(Notification notification) {
+        Map<String, Object> metadata = null;
+        if (notification.getMetadata() != null) {
+            try {
+                metadata = objectMapper.readValue(notification.getMetadata(), Map.class);
+            } catch (JsonProcessingException e) {
+                log.error("Error deserializing metadata", e);
+            }
+        }
+
         return NotificationResponse.builder()
                 .id(notification.getId())
                 .type(notification.getType().name())
@@ -138,6 +160,7 @@ public class NotificationService {
                 .referenceType(notification.getReferenceType())
                 .read(notification.isRead())
                 .createdAt(notification.getCreatedAt())
+                .metadata(metadata)
                 .build();
     }
 }

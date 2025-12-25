@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -42,5 +43,7 @@ public class NotificationResponse {
 
     @Schema(description = "Notification creation time")
     private LocalDateTime createdAt;
-}
 
+    @Schema(description = "Additional metadata (e.g. resortName)")
+    private Map<String, Object> metadata;
+}

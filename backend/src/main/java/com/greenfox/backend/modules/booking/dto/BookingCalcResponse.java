@@ -53,6 +53,12 @@ public class BookingCalcResponse {
     @Schema(description = "Discount amount")
     private BigDecimal discountAmount;
 
+    @Schema(description = "Discounted price (Base - Discount)")
+    private BigDecimal discountedPrice;
+
+    @Schema(description = "Tax amount")
+    private BigDecimal tax;
+
     @Schema(description = "Final total price")
     private BigDecimal totalPrice;
 
@@ -65,4 +71,3 @@ public class BookingCalcResponse {
     @Schema(description = "Unavailability reason if not available")
     private String unavailableReason;
 }
-

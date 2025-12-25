@@ -119,6 +119,8 @@ public class BookingService {
                 .baseTotal(baseTotal)
                 .discountPercent(discountPercent)
                 .discountAmount(discountAmount)
+                .discountedPrice(discountedBase)
+                .tax(taxAmount)
                 .totalPrice(totalPrice)
                 .hasPromo(activePromo.isPresent())
                 .available(true)
