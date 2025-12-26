@@ -30,19 +30,16 @@ import java.util.function.Function;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class TripAssistantService {
 
-    private final ChatClient.Builder chatClientBuilder;
+    private ChatClient.Builder chatClientBuilder;
     private final ResortRepository resortRepository;
     private final ResortMapper resortMapper;
 
-    public TripAssistantService(
-            org.springframework.beans.factory.annotation.Autowired(required = false) ChatClient.Builder chatClientBuilder,
-            ResortRepository resortRepository,
-            ResortMapper resortMapper) {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setChatClientBuilder(ChatClient.Builder chatClientBuilder) {
         this.chatClientBuilder = chatClientBuilder;
-        this.resortRepository = resortRepository;
-        this.resortMapper = resortMapper;
     }
 
     private static final int MAX_RESULTS = 10;
