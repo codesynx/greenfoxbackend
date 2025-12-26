@@ -34,19 +34,15 @@ public class VertexAiConfig {
      */
     @Bean
     @ConditionalOnBean(GoogleCredentials.class)
+    @ConditionalOnExpression("#{environment.getProperty('GCP_PROJECT_ID') != null and !environment.getProperty('GCP_PROJECT_ID').startsWith('your-')}")
     public VertexAI vertexAI(GoogleCredentials credentials) {
-        if (projectId == null || projectId.isBlank() || projectId.startsWith("your-")) {
-            log.warn("⚠ GCP_PROJECT_ID not configured, Vertex AI will not initialize");
-            return null;
-        }
-
         try {
             VertexAI vertexAI = new VertexAI(projectId, location);
             log.info("✓ Vertex AI client initialized - Project: {}, Location: {}", projectId, location);
             return vertexAI;
         } catch (Exception e) {
             log.error("Failed to initialize Vertex AI: {}", e.getMessage());
-            return null;
+            throw new RuntimeException("Failed to initialize Vertex AI", e);
         }
     }
 
