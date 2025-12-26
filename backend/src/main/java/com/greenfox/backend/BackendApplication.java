@@ -55,13 +55,9 @@ public class BackendApplication {
                 e.printStackTrace();
             }
         } else {
-            String existingCredentials = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
-            if (existingCredentials != null) {
-                System.out.println("✓ Using GOOGLE_APPLICATION_CREDENTIALS: " + existingCredentials);
-            } else {
-                System.out.println("⚠ Warning: No GCP credentials configured");
-                System.out.println("  Set GCP_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS");
-            }
+            System.out.println("⚠ Warning: No GCP credentials configured");
+            System.out.println("  Set GCP_SERVICE_ACCOUNT_JSON environment variable with your service account JSON");
+            System.out.println("  GCP services (Vertex AI, Cloud Storage) will not work without credentials");
         }
     }
 

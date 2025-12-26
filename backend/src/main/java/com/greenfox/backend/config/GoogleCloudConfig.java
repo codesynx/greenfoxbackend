@@ -10,7 +10,7 @@ import java.io.IOException;
 
 /**
  * Configuration for Google Cloud credentials.
- * Credentials are set up in BackendApplication.main() before Spring starts.
+ * Credentials are set up in BackendApplication.main() from GCP_SERVICE_ACCOUNT_JSON env var.
  * This config provides a GoogleCredentials bean for optional dependency injection.
  */
 @Slf4j
@@ -31,7 +31,7 @@ public class GoogleCloudConfig {
             return credentials;
         } catch (IOException e) {
             log.warn("Google Cloud credentials not available: {}", e.getMessage());
-            log.warn("GCP services (Vertex AI, Cloud Storage) will not work. Set GCP_SERVICE_ACCOUNT_JSON if needed.");
+            log.warn("GCP services (Vertex AI, Cloud Storage) will not work. Set GCP_SERVICE_ACCOUNT_JSON environment variable.");
             return null;
         }
     }
