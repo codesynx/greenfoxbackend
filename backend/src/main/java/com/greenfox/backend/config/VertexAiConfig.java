@@ -57,8 +57,8 @@ public class VertexAiConfig {
     @ConditionalOnBean(VertexAI.class)
     public VertexAiGeminiChatModel vertexAiGeminiChatModel(VertexAI vertexAI) {
         VertexAiGeminiChatOptions options = VertexAiGeminiChatOptions.builder()
-                .withModel(model)
-                .withTemperature(0.7)
+                .model(model)
+                .temperature(0.7)
                 .build();
 
         return new VertexAiGeminiChatModel(vertexAI, options);
