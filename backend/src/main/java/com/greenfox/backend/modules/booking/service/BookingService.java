@@ -66,19 +66,23 @@ public class BookingService {
                     .build();
         }
 
-        // Check availability
-        List<Booking> overlapping = bookingRepository.findOverlappingBookings(
+        // Check availability - count booked rooms vs total rooms
+        Long bookedRooms = bookingRepository.countBookedRoomsForDateRange(
                 request.getResortId(),
                 request.getCheckInDate(),
                 request.getCheckOutDate()
         );
 
-        if (!overlapping.isEmpty()) {
+        // Check if there are available rooms
+        int totalRooms = resort.getTotalRooms() != null ? resort.getTotalRooms() : 1;
+        long availableRooms = totalRooms - (bookedRooms != null ? bookedRooms : 0);
+
+        if (availableRooms <= 0) {
             return BookingCalcResponse.builder()
                     .resortId(resort.getId())
                     .resortName(resort.getName())
                     .available(false)
-                    .unavailableReason("Resort is not available for selected dates")
+                    .unavailableReason("No rooms available for selected dates (" + bookedRooms + "/" + totalRooms + " booked)")
                     .build();
         }
 
@@ -140,15 +144,26 @@ public class BookingService {
         Resort resort = resortRepository.findByIdAndDeletedFalseAndActiveTrue(request.getResortId())
                 .orElseThrow(() -> new ResourceNotFoundException("Resort", "id", request.getResortId()));
 
-        // Check availability again (race condition protection)
-        List<Booking> overlapping = bookingRepository.findOverlappingBookings(
+        // Check availability with pessimistic lock (prevents race conditions)
+        // The lock ensures no other transaction can book the same room until we commit
+        Long bookedRooms = bookingRepository.countBookedRoomsForDateRange(
                 request.getResortId(),
                 request.getCheckInDate(),
                 request.getCheckOutDate()
         );
 
-        if (!overlapping.isEmpty()) {
-            throw new BadRequestException("Resort is not available for selected dates");
+        int totalRooms = resort.getTotalRooms() != null ? resort.getTotalRooms() : 1;
+        long availableRooms = totalRooms - (bookedRooms != null ? bookedRooms : 0);
+
+        if (availableRooms <= 0) {
+            throw new BadRequestException(
+                "No rooms available for selected dates (" + bookedRooms + "/" + totalRooms + " booked)");
+        }
+
+        // Additional validation: check guest count against resort capacity
+        int totalGuests = request.getAdults() + (request.getChildren() != null ? request.getChildren() : 0);
+        if (resort.getMaxGuests() != null && totalGuests > resort.getMaxGuests()) {
+            throw new BadRequestException("Maximum capacity is " + resort.getMaxGuests() + " guests");
         }
 
         // Calculate pricing

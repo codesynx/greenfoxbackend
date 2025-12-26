@@ -47,9 +47,23 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
      */
     @Query("SELECT b FROM Booking b WHERE b.resort.id = :resortId " +
            "AND b.deleted = false " +
-           "AND b.status NOT IN ('CANCELLED') " +
+           "AND b.status NOT IN ('CANCELLED', 'REJECTED') " +
            "AND ((b.checkInDate <= :checkOut AND b.checkOutDate >= :checkIn))")
     List<Booking> findOverlappingBookings(
+            @Param("resortId") UUID resortId,
+            @Param("checkIn") LocalDate checkIn,
+            @Param("checkOut") LocalDate checkOut);
+
+    /**
+     * Count the number of rooms already booked for a resort in a date range.
+     * Uses pessimistic write lock to prevent concurrent booking race conditions.
+     */
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.resort.id = :resortId " +
+           "AND b.deleted = false " +
+           "AND b.status NOT IN ('CANCELLED', 'REJECTED') " +
+           "AND ((b.checkInDate < :checkOut AND b.checkOutDate > :checkIn))")
+    @jakarta.persistence.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    Long countBookedRoomsForDateRange(
             @Param("resortId") UUID resortId,
             @Param("checkIn") LocalDate checkIn,
             @Param("checkOut") LocalDate checkOut);

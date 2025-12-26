@@ -86,6 +86,11 @@ public class Resort extends BaseEntity {
     @Column(name = "max_guests")
     private Integer maxGuests;
 
+    // Total number of rooms/units available for booking
+    @Column(name = "total_rooms", nullable = false)
+    @Builder.Default
+    private Integer totalRooms = 1;
+
     // Promo flag for sorting priority
     @Column(name = "is_promo", nullable = false)
     @Builder.Default

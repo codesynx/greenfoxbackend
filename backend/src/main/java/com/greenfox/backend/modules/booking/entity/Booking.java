@@ -29,6 +29,10 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class Booking extends BaseEntity {
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

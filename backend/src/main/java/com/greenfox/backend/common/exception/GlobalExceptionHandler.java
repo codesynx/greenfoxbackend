@@ -16,6 +16,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PessimisticLockException;
+import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -114,6 +118,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error("ACCESS_DENIED", "Access denied"));
+    }
+
+    @ExceptionHandler({OptimisticLockException.class, ObjectOptimisticLockingFailureException.class})
+    public ResponseEntity<ApiResponse<Void>> handleOptimisticLockException(Exception ex) {
+        log.warn("Optimistic lock conflict detected: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error("BOOKING_CONFLICT",
+                    "This booking was modified by another user. Please try again."));
+    }
+
+    @ExceptionHandler({PessimisticLockException.class, CannotAcquireLockException.class})
+    public ResponseEntity<ApiResponse<Void>> handleLockException(Exception ex) {
+        log.warn("Database lock conflict: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error("CONCURRENT_BOOKING",
+                    "Another user is currently booking this resort. Please wait a moment and try again."));
     }
 
     @ExceptionHandler(Exception.class)
