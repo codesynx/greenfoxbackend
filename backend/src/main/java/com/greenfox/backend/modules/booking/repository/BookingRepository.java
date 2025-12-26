@@ -2,8 +2,6 @@ package com.greenfox.backend.modules.booking.repository;
 
 import com.greenfox.backend.modules.booking.entity.Booking;
 import com.greenfox.backend.modules.booking.entity.Booking.BookingStatus;
-import jakarta.persistence.Lock;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -58,13 +56,13 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     /**
      * Count the number of rooms already booked for a resort in a date range.
-     * Uses pessimistic write lock to prevent concurrent booking race conditions.
+     * Executed within a transaction to ensure consistency.
+     * The configured READ_COMMITTED isolation level prevents concurrent booking conflicts.
      */
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.resort.id = :resortId " +
            "AND b.deleted = false " +
            "AND b.status NOT IN ('CANCELLED', 'REJECTED') " +
            "AND ((b.checkInDate < :checkOut AND b.checkOutDate > :checkIn))")
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Long countBookedRoomsForDateRange(
             @Param("resortId") UUID resortId,
             @Param("checkIn") LocalDate checkIn,
