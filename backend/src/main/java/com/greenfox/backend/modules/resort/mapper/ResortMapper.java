@@ -28,6 +28,8 @@ public interface ResortMapper {
     @Mapping(target = "photos", ignore = true)
     @Mapping(target = "promo", constant = "false")
     @Mapping(target = "active", constant = "true")
+    @Mapping(target = "totalRooms", constant = "1")
+    @Mapping(target = "distanceKm", ignore = true)
     Resort toEntity(CreateResortRequest request);
 
     default String getMainPhotoUrl(Resort resort) {
