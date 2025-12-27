@@ -33,14 +33,9 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class TripAssistantService {
 
-    private ChatClient.Builder chatClientBuilder;
+    private final ChatClient.Builder chatClientBuilder;
     private final ResortRepository resortRepository;
     private final ResortMapper resortMapper;
-
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    public void setChatClientBuilder(ChatClient.Builder chatClientBuilder) {
-        this.chatClientBuilder = chatClientBuilder;
-    }
 
     private static final int MAX_RESULTS = 10;
 
@@ -96,21 +91,6 @@ public class TripAssistantService {
      */
     public AiChatResponse chat(String userMessage, String language) {
         log.info("Processing AI chat request - Language: {}, Message: {}", language, userMessage);
-
-        // Check if AI is available
-        if (chatClientBuilder == null) {
-            log.warn("AI chat request received but ChatClient is not available (GCP credentials not configured)");
-            String errorMessage = switch (language) {
-                case "ru" -> "AI функции временно недоступны. Пожалуйста, попробуйте позже.";
-                case "kk" -> "AI функциялары уақытша қол жетімді емес. Кейінірек қайталап көріңіз.";
-                default -> "AI features are temporarily unavailable. Please try again later.";
-            };
-
-            return AiChatResponse.builder()
-                    .replyText(errorMessage)
-                    .recommendations(new ArrayList<>())
-                    .build();
-        }
 
         // Get system prompt for the specified language
         String systemPrompt = SYSTEM_PROMPTS.getOrDefault(language, SYSTEM_PROMPTS.get("en"));

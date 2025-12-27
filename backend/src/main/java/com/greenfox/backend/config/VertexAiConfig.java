@@ -29,12 +29,11 @@ public class VertexAiConfig {
     private String model;
 
     /**
-     * Create VertexAI client only when GoogleCredentials bean is available.
-     * This prevents initialization errors when credentials are not configured.
+     * Create VertexAI client when GoogleCredentials bean is available.
+     * Credentials are now hardcoded in GoogleCloudConfig, so this will always initialize.
      */
     @Bean
     @ConditionalOnBean(GoogleCredentials.class)
-    @ConditionalOnExpression("#{environment.getProperty('GCP_PROJECT_ID') != null and !environment.getProperty('GCP_PROJECT_ID').startsWith('your-')}")
     public VertexAI vertexAI(GoogleCredentials credentials) {
         try {
             VertexAI vertexAI = new VertexAI(projectId, location);

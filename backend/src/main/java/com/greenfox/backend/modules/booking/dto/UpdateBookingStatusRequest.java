@@ -18,8 +18,8 @@ import lombok.NoArgsConstructor;
 public class UpdateBookingStatusRequest {
 
     @NotBlank(message = "Status is required")
-    @Pattern(regexp = "^(CONFIRMED|COMPLETED|CANCELLED)$", 
-             message = "Status must be CONFIRMED, COMPLETED, or CANCELLED")
+    @Pattern(regexp = "^(CONFIRMED|COMPLETED|CANCELLED|REJECTED)$",
+             message = "Status must be CONFIRMED, COMPLETED, CANCELLED, or REJECTED")
     @Schema(description = "New booking status", example = "CONFIRMED")
     private String status;
 
