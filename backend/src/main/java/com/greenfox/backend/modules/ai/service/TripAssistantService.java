@@ -16,7 +16,6 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.vertexai.gemini.VertexAiGeminiChatOptions;
 import org.springframework.ai.model.function.FunctionCallback;
-import org.springframework.ai.model.function.FunctionCallbackWrapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -102,7 +101,7 @@ public class TripAssistantService {
         List<ResortListResponse> recommendations = new ArrayList<>();
 
         // Create function callback wrapper for searchResorts
-        FunctionCallback searchResortsCallback = FunctionCallbackWrapper.builder(searchResorts())
+        FunctionCallback searchResortsCallback = FunctionCallback.builder(searchResorts())
                 .withName("searchResorts")
                 .withDescription("Search for resorts and hotels in Kazakhstan based on user criteria. " +
                         "Parameters: city (string), amenities (array of strings), maxPrice (number), " +
