@@ -101,9 +101,9 @@ public class TripAssistantService {
         List<ResortListResponse> recommendations = new ArrayList<>();
 
         // Create function callback wrapper for searchResorts
-        FunctionCallback searchResortsCallback = FunctionCallback.builder(searchResorts())
-                .withName("searchResorts")
-                .withDescription("Search for resorts and hotels in Kazakhstan based on user criteria. " +
+        FunctionCallback searchResortsCallback = FunctionCallback.builder()
+                .function("searchResorts", searchResorts())
+                .description("Search for resorts and hotels in Kazakhstan based on user criteria. " +
                         "Parameters: city (string), amenities (array of strings), maxPrice (number), " +
                         "minPrice (number), guests (integer), query (string for general search). " +
                         "Returns a list of matching resorts with details like name, city, price, rating, and amenities.")
