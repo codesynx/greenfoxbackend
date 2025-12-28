@@ -6,8 +6,16 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Run stage
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
+
+# Install required native libraries for gRPC
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libssl3 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/target/*.jar app.jar
 
 # Environment variables with default values for local testing
@@ -19,5 +27,5 @@ ENV SPRING_DATA_REDIS_HOST=localhost
 ENV SPRING_DATA_REDIS_PORT=6379
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Djava.library.path=/usr/lib", "-jar", "app.jar"]
 
