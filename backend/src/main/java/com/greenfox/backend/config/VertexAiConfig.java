@@ -37,7 +37,8 @@ public class VertexAiConfig {
     public VertexAI vertexAI(GoogleCredentials credentials) {
         try {
             // Explicitly construct the API endpoint to ensure correct routing
-            String apiEndpoint = location + "-aiplatform.googleapis.com:443";
+            // Do not include port number, as gRPC adds it automatically and including it causes Malformed IPv6 address error
+            String apiEndpoint = location + "-aiplatform.googleapis.com";
             
             VertexAI.Builder builder = new VertexAI.Builder()
                     .setProjectId(projectId)
