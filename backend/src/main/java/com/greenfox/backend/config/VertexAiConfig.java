@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.google.cloud.vertexai.VertexAI;
+import com.google.cloud.vertexai.Transport;
 
 /**
  * Configuration for Google Vertex AI / Gemini.
@@ -36,19 +37,27 @@ public class VertexAiConfig {
     @ConditionalOnBean(GoogleCredentials.class)
     public VertexAI vertexAI(GoogleCredentials credentials) {
         try {
+            // Ensure location is valid for Prediction Service
+            String effectiveLocation = location;
+            if ("global".equalsIgnoreCase(location)) {
+                log.warn("Location 'global' is not supported for Prediction Service. Defaulting to 'us-central1'.");
+                effectiveLocation = "us-central1";
+            }
+            
             // Explicitly construct the API endpoint to ensure correct routing
             // Do not include port number, as gRPC adds it automatically and including it causes Malformed IPv6 address error
-            String apiEndpoint = location + "-aiplatform.googleapis.com";
+            String apiEndpoint = effectiveLocation + "-aiplatform.googleapis.com";
             
             VertexAI.Builder builder = new VertexAI.Builder()
                     .setProjectId(projectId)
-                    .setLocation(location)
+                    .setLocation(effectiveLocation)
+                    .setTransport(Transport.REST) // Use REST transport to avoid gRPC network/proxy issues
                     .setApiEndpoint(apiEndpoint)
                     .setCredentials(credentials);
             
             VertexAI vertexAI = builder.build();
-            log.info("✓ Vertex AI client initialized with credentials - Project: {}, Location: {}, Endpoint: {}", 
-                    projectId, location, apiEndpoint);
+            log.info("✓ Vertex AI client initialized with credentials - Project: {}, Location: {}, Endpoint: {}, Transport: REST", 
+                    projectId, effectiveLocation, apiEndpoint);
             return vertexAI;
         } catch (Exception e) {
             log.error("Failed to initialize Vertex AI: {}", e.getMessage());
