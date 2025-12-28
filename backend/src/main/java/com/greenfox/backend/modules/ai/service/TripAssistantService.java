@@ -107,6 +107,7 @@ public class TripAssistantService {
                         "Parameters: city (string), amenities (array of strings), maxPrice (number), " +
                         "minPrice (number), guests (integer), query (string for general search). " +
                         "Returns a list of matching resorts with details like name, city, price, rating, and amenities.")
+                .inputType(ResortSearchRequest.class)
                 .build();
 
         // Create chat options with function callbacks
