@@ -36,12 +36,18 @@ public class VertexAiConfig {
     @ConditionalOnBean(GoogleCredentials.class)
     public VertexAI vertexAI(GoogleCredentials credentials) {
         try {
+            // Explicitly construct the API endpoint to ensure correct routing
+            String apiEndpoint = location + "-aiplatform.googleapis.com:443";
+            
             VertexAI.Builder builder = new VertexAI.Builder()
                     .setProjectId(projectId)
                     .setLocation(location)
+                    .setApiEndpoint(apiEndpoint)
                     .setCredentials(credentials);
+            
             VertexAI vertexAI = builder.build();
-            log.info("✓ Vertex AI client initialized with credentials - Project: {}, Location: {}", projectId, location);
+            log.info("✓ Vertex AI client initialized with credentials - Project: {}, Location: {}, Endpoint: {}", 
+                    projectId, location, apiEndpoint);
             return vertexAI;
         } catch (Exception e) {
             log.error("Failed to initialize Vertex AI: {}", e.getMessage());
