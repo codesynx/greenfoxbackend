@@ -27,5 +27,4 @@ ENV SPRING_DATA_REDIS_HOST=localhost
 ENV SPRING_DATA_REDIS_PORT=6379
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-Djava.library.path=/usr/lib", "-jar", "app.jar"]
-
+ENTRYPOINT ["java", "-Djava.library.path=/usr/lib", "-Dio.grpc.netty.shaded.io.netty.handler.ssl.noOpenSsl=true", "-jar", "app.jar"]
