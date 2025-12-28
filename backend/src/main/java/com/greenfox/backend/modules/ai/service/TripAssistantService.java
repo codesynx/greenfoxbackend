@@ -14,6 +14,9 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.vertexai.gemini.VertexAiGeminiChatOptions;
+import org.springframework.ai.model.function.FunctionCallback;
+import org.springframework.ai.model.function.FunctionCallbackWrapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -98,10 +101,24 @@ public class TripAssistantService {
         // Track recommendations found via function calling
         List<ResortListResponse> recommendations = new ArrayList<>();
 
+        // Create function callback wrapper for searchResorts
+        FunctionCallback searchResortsCallback = FunctionCallbackWrapper.builder(searchResorts())
+                .withName("searchResorts")
+                .withDescription("Search for resorts and hotels in Kazakhstan based on user criteria. " +
+                        "Parameters: city (string), amenities (array of strings), maxPrice (number), " +
+                        "minPrice (number), guests (integer), query (string for general search). " +
+                        "Returns a list of matching resorts with details like name, city, price, rating, and amenities.")
+                .build();
+
+        // Create chat options with function callbacks
+        VertexAiGeminiChatOptions chatOptions = VertexAiGeminiChatOptions.builder()
+                .functionCallbacks(List.of(searchResortsCallback))
+                .build();
+
         // Create chat client with function calling (tool)
         ChatClient chatClient = chatClientBuilder
                 .defaultSystem(systemPrompt)
-                .defaultFunction("searchResorts", searchResorts()) // Register the function
+                .defaultOptions(chatOptions)
                 .build();
 
         try {
