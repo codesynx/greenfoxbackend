@@ -47,7 +47,7 @@ public class GoogleCloudConfig {
         try {
             GoogleCredentials credentials = GoogleCredentials.fromStream(
                     new ByteArrayInputStream(GCP_CREDENTIALS_JSON.getBytes(StandardCharsets.UTF_8))
-            );
+            ).createScoped("https://www.googleapis.com/auth/cloud-platform");
             log.info("✓ Google Cloud credentials bean created successfully from hardcoded JSON");
             return credentials;
         } catch (IOException e) {
