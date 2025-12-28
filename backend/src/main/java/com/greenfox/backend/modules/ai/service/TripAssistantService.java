@@ -101,7 +101,7 @@ public class TripAssistantService {
         // Create chat client with function calling (tool)
         ChatClient chatClient = chatClientBuilder
                 .defaultSystem(systemPrompt)
-                .defaultFunctions("searchResorts") // Register the function name
+                .defaultFunction("searchResorts", searchResorts()) // Register the function
                 .build();
 
         try {
