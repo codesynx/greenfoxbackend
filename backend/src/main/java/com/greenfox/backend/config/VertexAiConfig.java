@@ -36,8 +36,12 @@ public class VertexAiConfig {
     @ConditionalOnBean(GoogleCredentials.class)
     public VertexAI vertexAI(GoogleCredentials credentials) {
         try {
-            VertexAI vertexAI = new VertexAI(projectId, location);
-            log.info("✓ Vertex AI client initialized - Project: {}, Location: {}", projectId, location);
+            VertexAI.Builder builder = new VertexAI.Builder()
+                    .setProjectId(projectId)
+                    .setLocation(location)
+                    .setCredentials(credentials);
+            VertexAI vertexAI = builder.build();
+            log.info("✓ Vertex AI client initialized with credentials - Project: {}, Location: {}", projectId, location);
             return vertexAI;
         } catch (Exception e) {
             log.error("Failed to initialize Vertex AI: {}", e.getMessage());
