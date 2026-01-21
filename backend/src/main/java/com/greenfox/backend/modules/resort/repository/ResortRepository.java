@@ -27,6 +27,11 @@ public interface ResortRepository extends JpaRepository<Resort, UUID>, JpaSpecif
     Page<Resort> findByDeletedFalseAndActiveTrue(Pageable pageable);
 
     /**
+     * Find all active resorts (for RAG ingestion).
+     */
+    List<Resort> findByDeletedFalseAndActiveTrue();
+
+    /**
      * Find resorts by city with pagination.
      */
     Page<Resort> findByCityIgnoreCaseAndDeletedFalseAndActiveTrue(String city, Pageable pageable);

@@ -57,6 +57,14 @@ public class ResortService {
     }
 
     /**
+     * Search resorts for AI module (returns full entities to avoid N+1 queries).
+     */
+    @Transactional(readOnly = true)
+    public List<Resort> searchResortsForAi(ResortFilterRequest filter, Pageable pageable) {
+        return resortRepository.findAllWithDistance(filter, pageable).getContent();
+    }
+
+    /**
      * Get resort by ID with full details.
      */
     @Transactional(readOnly = true)
@@ -464,4 +472,3 @@ public class ResortService {
         }
     }
 }
-

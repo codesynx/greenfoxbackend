@@ -102,13 +102,19 @@ public class FavoriteService {
 
         var content = favorites.getContent().stream()
                 .map(favorite -> {
-                    ResortListResponse resortResponse = resortMapper.toListResponse(favorite.getResort());
-                    return FavoriteResponse.builder()
-                            .id(favorite.getId())
-                            .resort(resortResponse)
-                            .favoritedAt(favorite.getCreatedAt())
-                            .build();
+                    try {
+                        ResortListResponse resortResponse = resortMapper.toListResponse(favorite.getResort());
+                        return FavoriteResponse.builder()
+                                .id(favorite.getId())
+                                .resort(resortResponse)
+                                .favoritedAt(favorite.getCreatedAt())
+                                .build();
+                    } catch (Exception e) {
+                        log.error("Error mapping favorite {}: {}", favorite.getId(), e.getMessage());
+                        return null;
+                    }
                 })
+                .filter(java.util.Objects::nonNull)
                 .toList();
 
         return PageResponse.from(favorites, content);

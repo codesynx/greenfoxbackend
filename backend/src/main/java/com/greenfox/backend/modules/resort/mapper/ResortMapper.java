@@ -37,9 +37,13 @@ public interface ResortMapper {
             return null;
         }
         return resort.getPhotos().stream()
-                .filter(p -> p.getOrder() == 0)
+                .filter(p -> p != null && p.getOrder() == 0)
                 .findFirst()
                 .map(Resort.ResortPhoto::getUrl)
-                .orElse(resort.getPhotos().get(0).getUrl());
+                .orElseGet(() -> resort.getPhotos().stream()
+                        .filter(p -> p != null)
+                        .findFirst()
+                        .map(Resort.ResortPhoto::getUrl)
+                        .orElse(null));
     }
 }
