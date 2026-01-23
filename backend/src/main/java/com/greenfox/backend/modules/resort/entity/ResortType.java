@@ -7,5 +7,5 @@ public enum ResortType {
     VILLA,
     RESORT,
     HOTEL,
-    APARTMENT
+    SANATORIUM
 }

@@ -30,6 +30,13 @@ public interface ResortMapper {
     @Mapping(target = "active", constant = "true")
     @Mapping(target = "totalRooms", constant = "1")
     @Mapping(target = "distanceKm", ignore = true)
+    @Mapping(target = "houseRules", ignore = true)
+    @Mapping(target = "highlights", ignore = true)
+    @Mapping(target = "neighborhoodDescription", ignore = true)
+    @Mapping(target = "transportDescription", ignore = true)
+    @Mapping(target = "nearbyAttractions", ignore = true)
+    @Mapping(target = "cancellationPolicy", ignore = true)
+    @Mapping(target = "categorizedAmenities", ignore = true)
     Resort toEntity(CreateResortRequest request);
 
     default String getMainPhotoUrl(Resort resort) {

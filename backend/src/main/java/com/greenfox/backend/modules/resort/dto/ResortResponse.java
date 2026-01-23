@@ -1,7 +1,6 @@
 package com.greenfox.backend.modules.resort.dto;
 
-import com.greenfox.backend.modules.resort.entity.Resort;
-import com.greenfox.backend.modules.resort.entity.ResortType;
+import com.greenfox.backend.modules.resort.entity.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -76,5 +76,26 @@ public class ResortResponse {
 
     @Schema(description = "Creation timestamp")
     private LocalDateTime createdAt;
+
+    @Schema(description = "House rules (check-in/out times, policies)")
+    private HouseRules houseRules;
+
+    @Schema(description = "Property highlights")
+    private List<PropertyHighlight> highlights;
+
+    @Schema(description = "Neighborhood description")
+    private String neighborhoodDescription;
+
+    @Schema(description = "Transport/getting there description")
+    private String transportDescription;
+
+    @Schema(description = "Nearby attractions with distances")
+    private List<NearbyAttraction> nearbyAttractions;
+
+    @Schema(description = "Cancellation policy")
+    private CancellationPolicy cancellationPolicy;
+
+    @Schema(description = "Categorized amenities for enhanced display")
+    private Map<String, List<String>> categorizedAmenities;
 }
 

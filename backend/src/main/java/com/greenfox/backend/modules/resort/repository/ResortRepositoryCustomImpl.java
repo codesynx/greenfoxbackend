@@ -66,12 +66,14 @@ public class ResortRepositoryCustomImpl implements ResortRepositoryCustom {
         sql.append(commonSql);
         countSql.append(commonSql);
 
-        // 3. Ordering
-        sql.append("ORDER BY r.is_promo DESC ");
+        // 3. Ordering - prioritize distance when coordinates provided
         if (hasCoords) {
-            sql.append(", distance ASC ");
+            // Sort by distance first (nearest first), then promo, then rating
+            sql.append("ORDER BY distance ASC, r.is_promo DESC, r.rating DESC ");
+        } else {
+            // Without coordinates, sort by promo first, then rating
+            sql.append("ORDER BY r.is_promo DESC, r.rating DESC ");
         }
-        sql.append(", r.rating DESC ");
 
         // 4. Create Queries
         Query query = hasCoords 
@@ -83,7 +85,10 @@ public class ResortRepositoryCustomImpl implements ResortRepositoryCustom {
         // Set parameters
         params.forEach((key, value) -> {
             query.setParameter(key, value);
-            countQuery.setParameter(key, value);
+            // Only set parameters that exist in the count query (skip lat/lng which are only for distance)
+            if (!key.equals("lat") && !key.equals("lng")) {
+                countQuery.setParameter(key, value);
+            }
         });
 
         // 5. Pagination

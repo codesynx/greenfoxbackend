@@ -8,7 +8,9 @@ import org.hibernate.annotations.Type;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Resort entity representing a bookable resort/recreational location.
@@ -100,6 +102,42 @@ public class Resort extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private boolean active = true;
+
+    // House rules (check-in/out times, policies)
+    @Type(JsonType.class)
+    @Column(name = "house_rules", columnDefinition = "jsonb")
+    private HouseRules houseRules;
+
+    // Property highlights (key features)
+    @Type(JsonType.class)
+    @Column(name = "highlights", columnDefinition = "jsonb")
+    @Builder.Default
+    private List<PropertyHighlight> highlights = new ArrayList<>();
+
+    // Neighborhood description
+    @Column(name = "neighborhood_description", columnDefinition = "TEXT")
+    private String neighborhoodDescription;
+
+    // Transport/getting there description
+    @Column(name = "transport_description", columnDefinition = "TEXT")
+    private String transportDescription;
+
+    // Nearby attractions with distances
+    @Type(JsonType.class)
+    @Column(name = "nearby_attractions", columnDefinition = "jsonb")
+    @Builder.Default
+    private List<NearbyAttraction> nearbyAttractions = new ArrayList<>();
+
+    // Cancellation policy
+    @Type(JsonType.class)
+    @Column(name = "cancellation_policy", columnDefinition = "jsonb")
+    private CancellationPolicy cancellationPolicy;
+
+    // Categorized amenities (for enhanced display)
+    @Type(JsonType.class)
+    @Column(name = "categorized_amenities", columnDefinition = "jsonb")
+    @Builder.Default
+    private Map<String, List<String>> categorizedAmenities = new HashMap<>();
 
     @Transient
     private Double distanceKm;
